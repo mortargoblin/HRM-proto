@@ -1,6 +1,9 @@
+# import hrm
 def main():
-    print("Hello from hrm-proto!")
-
+    # print HRM
+    while True:
+        hrm = getHRM()
+        print(hrm)
 
 if __name__ == "__main__":
     main()

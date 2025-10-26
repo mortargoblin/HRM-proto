@@ -1,0 +1,7 @@
+[project]
+name = "hrm-proto"
+version = "0.1.0"
+description = "prototyping"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
