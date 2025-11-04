@@ -1,4 +1,3 @@
-
 import time
 from machine import UART, Pin, ADC, I2C
 from ssd1306 import SSD1306_I2C
