@@ -30,7 +30,55 @@ images = [
         0x80, 0x1f, 0xff, 0x80, 0x1f, 0xff, 0x80, 0x1f, 0xff, 0x80, 0x18, 0x03, 0x00, 0x18, 0x03, 0x00, 
         0x1f, 0xff, 0x80, 0x07, 0xff, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
 ]
-            
+
+class Encoder:
+    def __init__(self, rot_a, rot_b, rot_btn=None):
+        self.a = Pin(rot_a, mode=Pin.IN, pull=Pin.PULL_UP)
+        self.b = Pin(rot_b, mode=Pin.IN, pull=Pin.PULL_UP)
+        self.fifo = Fifo(30, typecode='i')
+        self.a.irq(handler=self.handler, trigger=Pin.IRQ_RISING, hard=True)
+
+        if rot_btn is not None:
+            self.btn = Pin(rot_btn, mode=Pin.IN, pull=Pin.PULL_UP)
+            self.btn.irq(handler=self.button_handler, trigger=Pin.IRQ_FALLING)
+        else:
+            self.btn = None
+
+    def handler(self, pin):
+        if self.b():
+            self.fifo.put(-1)
+        else:
+            self.fifo.put(1)
+
+    def button_handler(self, pin):
+        import utime
+        utime.sleep_ms(20)
+        if not pin.value():
+            print("Button pressed!")
+
+def main_Menu():
+    rot = Encoder(10, 11, 12)
+    cursor(25, 28)
+    
+    counter = 1
+    x = 0
+    y = 28
+    
+    while True:
+        fifo = int(rot.fifo.empty())
+        
+        if not fifo:
+            fifo_value = rot.fifo.get()
+            if fifo_value == 1 and counter < 2:
+                counter += 1
+                y = y - 22                
+                cursor(25, y)
+                
+            elif fifo_value == -1 and counter > 0:
+                counter = counter - 1
+                y += 22
+                cursor(25, y)
+                
 def cursor(x, y):
     oled.fill(0)
     for i in range(len(images)):
@@ -39,3 +87,5 @@ def cursor(x, y):
             oled.blit(img, 0,  + (0 + 23*i))
     oled.text("<", x, y)        
     oled.show()
+        
+main_Loop()
