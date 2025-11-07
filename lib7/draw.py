@@ -1,5 +1,6 @@
 from machine import Pin, I2C
 from ssd1306 import SSD1306_I2C
+import framebuf
 
 class Screen:
     width: int = 128
@@ -28,17 +29,23 @@ images = [
         0x1f, 0xff, 0x80, 0x07, 0xff, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
 ]
 
-def cursor(state: int):
+def menu(state: int):
     
-    STEP_SIZE = 22
+    step_size = 21
+    titles = ("title 1", "title 2", "title 3")
     
-    x: int = 22
-    y: int = STEP_SIZE * (state + 1)
+    # Font size is funny. last number is offset
+    cursor_x = 23
+    cursor_y = int(step_size / 2 + state * step_size - 3)
+    
+    title_x = 40
+    title_y = 10
 
     oled.fill(0)
     for i in range(len(images)):
             img = framebuf.FrameBuffer(images[i], 20, 20, framebuf.MONO_HLSB)
-            
-            oled.blit(img, 0,  + (0 + 23*i))
-    oled.text("<", x, y)        
+            oled.blit(img, 0, (step_size * i))
+
+    oled.text("<", cursor_x, cursor_y)
+    oled.text(titles[state], title_x, title_y)
     oled.show()

@@ -10,9 +10,7 @@ class Encoder:
 
         if rot_btn is not None:
             self.btn = Pin(rot_btn, mode=Pin.IN, pull=Pin.PULL_UP)
-            # self.btn.irq(handler=self.button_handler, trigger=Pin.IRQ_FALLING)
-        else:
-            self.btn = None
+            self.btn.irq(handler=self.button_handler, trigger=Pin.IRQ_FALLING)
 
     def handler(self, pin):
         if self.b():
