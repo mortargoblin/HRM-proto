@@ -1,14 +1,16 @@
 from machine import Pin
 from fifo import Fifo
+import utime
 
 class Encoder:
+    pressed: bool = False
     def __init__(self, rot_a, rot_b, rot_btn=None):
         self.a = Pin(rot_a, mode=Pin.IN, pull=Pin.PULL_UP)
         self.b = Pin(rot_b, mode=Pin.IN, pull=Pin.PULL_UP)
         self.fifo = Fifo(30, typecode='i')
         self.a.irq(handler=self.handler, trigger=Pin.IRQ_RISING, hard=True)
 
-        if rot_btn is not None:
+        if rot_btn != None:
             self.btn = Pin(rot_btn, mode=Pin.IN, pull=Pin.PULL_UP)
             self.btn.irq(handler=self.button_handler, trigger=Pin.IRQ_FALLING)
 
@@ -19,9 +21,20 @@ class Encoder:
             self.fifo.put(1)
 
     def button_handler(self, pin):
-        import utime
         utime.sleep_ms(20)
         if not pin.value():
-            print("Button pressed!")
+            self.pressed = True
 
-rot = Encoder(10, 11, 12)
+class Return:
+    #return button, used for returning
+    pressed: bool = False
+
+    def __init__(self, pin, mode, pull):
+        self.btn = Pin(pin, mode = mode, pull = pull)
+        self.btn.irq(handler=self.handler, trigger=self.btn.IRQ_FALLING, hard = True)
+
+    def handler(self, pin):
+        self.pressed = True
+
+# sw_0 = Pin(9, mode = Pin.IN, pull = Pin.PULL_UP)
+

@@ -1,6 +1,6 @@
-from machine import Pin, I2C
+from machine import Pin, I2C, ADC
 from ssd1306 import SSD1306_I2C
-import framebuf
+import framebuf, time
 
 class Screen:
     width: int = 128
@@ -29,6 +29,11 @@ images = [
         0x1f, 0xff, 0x80, 0x07, 0xff, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
 ]
 
+def get_hr(interval: float = 0):
+    HR_Raw = ADC(Pin(27, Pin.IN))
+    time.sleep(interval)
+    return int( HR_Raw.read_u16() )
+
 def menu(state: int):
     
     step_size = 21
@@ -49,3 +54,22 @@ def menu(state: int):
     oled.text("<", cursor_x, cursor_y)
     oled.text(titles[state], title_x, title_y)
     oled.show()
+
+
+def display_pulse():
+    oled.fill(0)
+    old_y = 1
+    for x in range(Screen.width):
+        y = int( get_hr(0) / 65536 * Screen.height )
+        if y > old_y:
+            for i in range(y - old_y):
+                oled.pixel(x, old_y+i, Screen.color)
+        elif y < old_y:
+            for i in range(abs(old_y) - abs(y)):
+                oled.pixel(x, old_y-i, Screen.color)
+        else:
+            oled.pixel(x, y, Screen.color)
+
+        old_y = y
+        oled.show()
+

@@ -17,8 +17,6 @@ class Screen:
 i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
 oled = SSD1306_I2C(Screen.width, Screen.height, i2c)
 
-print(Screen.width)
-
 def display_pulse():
     while True:
         oled.fill(0)
@@ -35,7 +33,6 @@ def display_pulse():
                 oled.pixel(x, y, Screen.color)
 
             old_y = y
-            print(y)
             oled.show()
 
 display_pulse()
