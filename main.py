@@ -6,8 +6,8 @@ micropython.alloc_emergency_exception_buf(200)
 
 class MenuState:
     HR_DISPLAY: int = 0
-    OPTION_2: int = 1
-    OPTION_3: int = 2
+    ADVANCED: int = 1
+    HISTORY: int = 2
 
 Encoder = buttons.Encoder(10, 11, 12)
 ReturnBtn = buttons.Return(9, Pin.IN, Pin.PULL_UP)
@@ -47,6 +47,14 @@ def launch(option: int):
         while ReturnBtn.pressed == False:
             # launch HR_DISPLAY
             draw.display_pulse()
+
+    elif option == MenuState.ADVANCED:
+        #Launch advanced measurements mode
+        return
+
+    elif option == MenuState.HISTORY:
+        #Launch history view mode
+        return
 
 if __name__=="__main__":
     main()
