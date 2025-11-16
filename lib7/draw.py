@@ -37,39 +37,53 @@ def get_hr(interval: float = 0):
 def menu(state: int):
     
     step_size = 21
-    titles = ("title 1", "title 2", "title 3")
+    titles = (
+            ["Live Pulse", "Display"],
+            ["Title 2", "Title 2 Row 2"],
+            "Title 3"
+            )
+    icon_y = 40
     
-    # Font size is funny. last number is offset
-    cursor_x = 23
-    cursor_y = int(step_size / 2 + state * step_size - 3)
+    cursor_x = int(step_size / 2 + state * step_size - 4)
+    cursor_y = icon_y + 20
     
-    title_x = 40
-    title_y = 10
+    title_x = 0
+    title_y = 5
 
     oled.fill(0)
     for i in range(len(images)):
             img = framebuf.FrameBuffer(images[i], 20, 20, framebuf.MONO_HLSB)
-            oled.blit(img, 0, (step_size * i))
+            oled.blit(img, (step_size * i), icon_y)
 
-    oled.text("<", cursor_x, cursor_y)
-    oled.text(titles[state], title_x, title_y)
+    oled.text("^", cursor_x, cursor_y)
+    if type(titles[state]) == list:
+        for title in titles[state]:
+            oled.text(title, title_x, title_y)
+            title_y += 10
+    else:
+        oled.text(titles[state], title_x, title_y)
+
     oled.show()
 
 
-def display_pulse():
-    oled.fill(0)
-    old_y = 1
-    for x in range(Screen.width):
-        y = int( get_hr(0) / 65536 * Screen.height )
-        if y > old_y:
-            for i in range(y - old_y):
-                oled.pixel(x, old_y+i, Screen.color)
-        elif y < old_y:
-            for i in range(abs(old_y) - abs(y)):
-                oled.pixel(x, old_y-i, Screen.color)
-        else:
-            oled.pixel(x, y, Screen.color)
+def display_pulse(ReturnBtn):
 
-        old_y = y
-        oled.show()
+    old_y = Screen.height // 2
+    while not ReturnBtn.pressed:
+        oled.fill(0)
+        for x in range(Screen.width):
+            y = int( get_hr(0) / 65536 * Screen.height )
+            if y > old_y:
+                for i in range(y - old_y):
+                    oled.pixel(x, old_y+i, Screen.color)
+            elif y < old_y:
+                for i in range(abs(old_y) - abs(y)):
+                    oled.pixel(x, old_y-i, Screen.color)
+            else:
+                oled.pixel(x, y, Screen.color)
+
+            old_y = y
+            oled.show()
+            if ReturnBtn.pressed:
+                break
 

@@ -44,9 +44,8 @@ def main():
 
 def launch(option: int):
     if option == MenuState.HR_DISPLAY:
-        while ReturnBtn.pressed == False:
-            # launch HR_DISPLAY
-            draw.display_pulse()
+        # launch HR_DISPLAY
+        draw.display_pulse(ReturnBtn)
 
     elif option == MenuState.ADVANCED:
         #Launch advanced measurements mode
