@@ -39,7 +39,7 @@ def menu(state: int):
     step_size = 21
     titles = (
             ["Live Pulse", "Display"],
-            ["Title 2", "Title 2 Row 2"],
+            ["Title 2", "Title 2 Row 2", "Row 3"],
             "Title 3"
             )
     icon_y = 40
@@ -72,7 +72,7 @@ def display_pulse(ReturnBtn):
     while not ReturnBtn.pressed:
         oled.fill(0)
         for x in range(Screen.width):
-            y = int( get_hr(0) / 65536 * Screen.height )
+            y = int( Screen.height - ( get_hr(0) / 65536 * Screen.height ) )
             if y > old_y:
                 for i in range(y - old_y):
                     oled.pixel(x, old_y+i, Screen.color)
