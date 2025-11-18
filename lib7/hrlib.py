@@ -1,8 +1,7 @@
 from machine import Pin, I2C, ADC 
 from ssd1306 import SSD1306_I2C
-import framebuf, time
 from piotimer import Piotimer
-
+import framebuf, time
 class Screen:
     width: int = 128
     height: int = 64
@@ -69,14 +68,12 @@ def menu(state: int):
     oled.show()
 
 def hr_monitor(ReturnBtn, graph: bool = False):
-    """
-    time_interval: int = 0
-    timer = Piotimer(freq=100, callback=) TODO: increment interval
+    timer = Piotimer(freq=1000, callback=lambda t: setattr(t, "count", t.count+1))
+    timer.count = 0
     detecting = False
     current_max = 0
-    last_peak_time = 0
     THRESHOLD = 65536 / 2
-    """
+    ppi_list = []
 
     old_y = Screen.height // 2
     while not ReturnBtn.pressed:
@@ -97,24 +94,27 @@ def hr_monitor(ReturnBtn, graph: bool = False):
                 old_y = y
                 oled.show()
 
-            if ReturnBtn.pressed:
-                break
-
-
-"""
             # PPI Measuring
-            # TODO: FIX TIMERS
             if hr_datapoint > THRESHOLD:
-                deteting = True
+                detecting = True
                 if hr_datapoint > current_max:
                     current_max = hr_datapoint
 
             else:
                 if detecting:
                     detecting = False
-                    time_interval = 0
-"""
+                    if timer.count > 1500:
+                        timer.count = 0
+                    if timer.count > 250:
+                        ppi_list.append(timer.count)
+                        timer.count = 0
+                        if len(ppi_list) > 5:
+                            bpm = 60000 / (sum(ppi_list[-5:]) / 5)
+                            print("bpm:", bpm)
 
+            if ReturnBtn.pressed:
+                break
 
     #final report
-
+    ppi_avg = sum(ppi_list) / len(ppi_list)
+    print("ppi_avg:", ppi_avg, "ms")
