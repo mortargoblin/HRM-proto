@@ -1,6 +1,7 @@
-from machine import Pin, I2C, ADC
+from machine import Pin, I2C, ADC 
 from ssd1306 import SSD1306_I2C
 import framebuf, time
+from piotimer import Piotimer
 
 class Screen:
     width: int = 128
@@ -10,6 +11,8 @@ class Screen:
 
 i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
 oled = SSD1306_I2C(Screen.width, Screen.height, i2c)
+#timer = Timer(period=10, mode = Timer.PERIODIC, callback = lambda t: print(1))
+
 
 images = [
     bytearray([
@@ -65,25 +68,53 @@ def menu(state: int):
 
     oled.show()
 
-
-def display_pulse(ReturnBtn):
+def hr_monitor(ReturnBtn, graph: bool = False):
+    """
+    time_interval: int = 0
+    timer = Piotimer(freq=100, callback=) TODO: increment interval
+    detecting = False
+    current_max = 0
+    last_peak_time = 0
+    THRESHOLD = 65536 / 2
+    """
 
     old_y = Screen.height // 2
     while not ReturnBtn.pressed:
         oled.fill(0)
         for x in range(Screen.width):
-            y = int( Screen.height - ( get_hr(0) / 65536 * Screen.height ) )
-            if y > old_y:
-                for i in range(y - old_y):
-                    oled.pixel(x, old_y+i, Screen.color)
-            elif y < old_y:
-                for i in range(abs(old_y) - abs(y)):
-                    oled.pixel(x, old_y-i, Screen.color)
-            else:
-                oled.pixel(x, y, Screen.color)
+            hr_datapoint = get_hr(0)
+            if graph:
+                y = int( Screen.height - (hr_datapoint / 65536 * Screen.height ) )
+                if y > old_y:
+                    for i in range(y - old_y):
+                        oled.pixel(x, old_y+i, Screen.color)
+                elif y < old_y:
+                    for i in range(abs(old_y) - abs(y)):
+                        oled.pixel(x, old_y-i, Screen.color)
+                else:
+                    oled.pixel(x, y, Screen.color)
 
-            old_y = y
-            oled.show()
+                old_y = y
+                oled.show()
+
             if ReturnBtn.pressed:
                 break
+
+
+"""
+            # PPI Measuring
+            # TODO: FIX TIMERS
+            if hr_datapoint > THRESHOLD:
+                deteting = True
+                if hr_datapoint > current_max:
+                    current_max = hr_datapoint
+
+            else:
+                if detecting:
+                    detecting = False
+                    time_interval = 0
+"""
+
+
+    #final report
 

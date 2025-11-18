@@ -1,5 +1,5 @@
 from machine import Pin
-from lib7 import buttons, draw
+from lib7 import buttons, hrlib
 import micropython
 
 micropython.alloc_emergency_exception_buf(200)
@@ -21,7 +21,7 @@ def main():
 
     ### MAIN LOOP ###
     while True:
-        draw.menu(current_state)
+        hrlib.menu(current_state)
 
         fifo = int(Encoder.fifo.empty())
 
@@ -45,7 +45,7 @@ def main():
 def launch(option: int):
     if option == MenuState.HR_DISPLAY:
         # launch HR_DISPLAY
-        draw.display_pulse(ReturnBtn)
+        hrlib.hr_monitor(ReturnBtn, True)
 
     elif option == MenuState.ADVANCED:
         #Launch advanced measurements mode
