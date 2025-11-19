@@ -8,12 +8,13 @@ class MenuState:
     HR_DISPLAY: int = 0
     ADVANCED: int = 1
     HISTORY: int = 2
+    KUBIOS: int = 3
 
 Encoder = buttons.Encoder(10, 11, 12)
 ReturnBtn = buttons.Return(9, Pin.IN, Pin.PULL_UP)
 # sw_0 = Pin(9, mode = Pin.IN, pull = Pin.PULL_UP)
 
-NUM_OPTIONS = 3
+NUM_OPTIONS = 4
 
 def main():
 
@@ -53,6 +54,10 @@ def launch(option: int):
 
     elif option == MenuState.HISTORY:
         #Launch history view mode
+        return
+
+    elif option == MenuState.KUBIOS:
+        # Launch Kubios anal
         return
 
 if __name__=="__main__":
