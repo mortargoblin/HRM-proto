@@ -1,6 +1,7 @@
 from machine import Pin, I2C, ADC 
 from ssd1306 import SSD1306_I2C
 from piotimer import Piotimer
+from fifo import Fifo
 import framebuf, time
 class Screen:
     width: int = 128
@@ -81,7 +82,7 @@ def hr_monitor(ReturnBtn, graph: bool, mode: str):
     ppi_list = []
     mean_bpm_list = []
 
-    hr_buffer = Fifo(size=5, handler = print("Interruption occurred!"))
+    hr_buffer = Fifo(size=5)
     start_time = time.time()
 
     old_y = Screen.height // 2
@@ -129,7 +130,7 @@ def hr_monitor(ReturnBtn, graph: bool, mode: str):
                 break
 
             #Final report for hrv mode
-            if time.time() - start_time >= 30 & mode == "hrv":
+            if time.time() - start_time >= 30 and mode == "hrv":
                 start_time = time.time()
                 break
         
