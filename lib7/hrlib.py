@@ -72,19 +72,26 @@ def menu(state: int):
 
     oled.show()
 
-def hr_monitor(ReturnBtn, graph: bool = False):
+def hr_monitor(ReturnBtn, graph: bool, mode: str):
     timer = Piotimer(freq=1000, callback=lambda t: setattr(t, "count", t.count+1))
     timer.count = 0
     detecting = False
     current_max = 0
     THRESHOLD = 65536 / 2
     ppi_list = []
+    mean_bpm_list = []
+
+    hr_buffer = Fifo(size=5, handler = print("Interruption occurred!"))
+    start_time = time.time()
 
     old_y = Screen.height // 2
+
     while not ReturnBtn.pressed:
         oled.fill(0)
+
         for x in range(Screen.width):
-            hr_datapoint = get_hr()
+            hr_buffer.put(get_hr())
+            hr_datapoint = hr_buffer.get()
             
             if graph:
                 y = int( Screen.height - (hr_datapoint / 65536 * Screen.height ) )
@@ -121,7 +128,12 @@ def hr_monitor(ReturnBtn, graph: bool = False):
             if ReturnBtn.pressed:
                 break
 
-    #final report
-    ppi_avg = sum(ppi_list) / len(ppi_list)
-    print("ppi_avg:", ppi_avg, "ms")
-
+            #Final report for hrv mode
+            if time.time() - start_time >= 30 & mode == "hrv":
+                start_time = time.time()
+                break
+        
+        if mode == "hrv":
+            #MEAN PPI, MEAN HR, RMSSD, SDNN
+            ppi_avg = sum(ppi_list) / len(ppi_list)
+            print("ppi_avg:", ppi_avg, "ms")

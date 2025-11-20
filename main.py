@@ -6,7 +6,7 @@ micropython.alloc_emergency_exception_buf(200)
 
 class MenuState:
     HR_DISPLAY: int = 0
-    ADVANCED: int = 1
+    HRV: int = 1
     HISTORY: int = 2
     KUBIOS: int = 3
 
@@ -17,7 +17,6 @@ ReturnBtn = buttons.Return(9, Pin.IN, Pin.PULL_UP)
 NUM_OPTIONS = 4
 
 def main():
-
     current_state = MenuState.HR_DISPLAY
 
     ### MAIN LOOP ###
@@ -46,11 +45,11 @@ def main():
 def launch(option: int):
     if option == MenuState.HR_DISPLAY:
         # launch HR_DISPLAY
-        hrlib.hr_monitor(ReturnBtn, True)
+        hrlib.hr_monitor(ReturnBtn, True, "hr")
 
-    elif option == MenuState.ADVANCED:
-        #Launch advanced measurements mode
-        return
+    elif option == MenuState.HRV:
+        hrlib.hr_monitor(ReturnBtn, True, "hrv")
+  
 
     elif option == MenuState.HISTORY:
         #Launch history view mode
