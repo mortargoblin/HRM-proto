@@ -3,7 +3,7 @@ from ssd1306 import SSD1306_I2C
 from piotimer import Piotimer
 from fifo import Fifo
 import framebuf, time, math
-from hrv import rmssd, sdnn
+from lib7 import hrv
 
 class Screen:
     width: int = 128
@@ -102,7 +102,7 @@ def hr_monitor(ReturnBtn, mode: str):
         for x in range(Screen.width):
             hr_buffer.put(get_hr())
             hr_datapoint = hr_buffer.get()
-            print(hr_datapoint)
+            # print(hr_datapoint)
             
             ### Drawing ###
             y = int( Screen.height - (hr_datapoint / 65536 * Screen.height ) )
@@ -173,8 +173,8 @@ def hr_monitor(ReturnBtn, mode: str):
                 #MEAN PPI, MEAN HR, RMSSD, SDNN
                 mean_ppi = sum(ppi_list) / len(ppi_list)
                 mean_bpm = sum(mean_bpm_list) / len(mean_bpm_list)
-                sd = sdnn(ppi_list)
-                rm = rmssd(mean_bpm_list)
+                sd = hrv.sdnn(ppi_list)
+                rm = hrv.rmssd(mean_bpm_list)
                 
                 print("[AVG_PPI]: ", mean_ppi, "ms")
                 print("[AVG_BPM]: ", mean_bpm, "/s")
