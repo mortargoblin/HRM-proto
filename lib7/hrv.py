@@ -10,7 +10,7 @@ def rmssd(ppi):
         diffs.append(d * d)
 
     mean_sq = sum(diffs) / len(diffs)
-    return math.sqrt(mean_sq)
+    return round(math.sqrt(mean_sq))
 
 
 def sdnn(ppi):
@@ -24,4 +24,4 @@ def sdnn(ppi):
         var_sum += (x - mean) ** 2
 
     variance = var_sum / (len(ppi) - 1)
-    return math.sqrt(variance)
+    return round(math.sqrt(variance))
