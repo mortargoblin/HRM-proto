@@ -3,7 +3,7 @@ from ssd1306 import SSD1306_I2C
 from piotimer import Piotimer
 from fifo import Fifo
 import framebuf, time, math
-from hrv import rmssd, sdnn
+from lib7 import hrv
 
 class Screen:
     width: int = 128
@@ -89,6 +89,7 @@ def hr_monitor(ReturnBtn, mode: str):
     threshold = 65536 / 2 + 1600
     ppi_list = []
     mean_bpm_list = []
+    bpm = 0
 
     hr_buffer = Fifo(size=5)
     start_time = time.time()
@@ -101,8 +102,9 @@ def hr_monitor(ReturnBtn, mode: str):
         for x in range(Screen.width):
             hr_buffer.put(get_hr())
             hr_datapoint = hr_buffer.get()
-            print(hr_datapoint)
+            # print(hr_datapoint)
             
+            ### Drawing ###
             y = int( Screen.height - (hr_datapoint / 65536 * Screen.height ) )
             if y > old_y:
                 for i in range(y - old_y):
@@ -113,10 +115,32 @@ def hr_monitor(ReturnBtn, mode: str):
             else:
                 oled.pixel(x, y, Screen.color)
 
+            if mode == "hr":
+                # BPM only
+                _x = Screen.width // 2
+                _y = Screen.height // 2 + 20
+                _width = 30
+                _height = 13
+                oled.fill_rect(
+                        _x - _width // 2,
+                        _y - _height // 2,
+                        _width, _height, Screen.color)
+                oled.text(
+                        str(int(bpm)),
+                        _x - 12,
+                        _y - 4,
+                        Screen.black)
+
+
+            elif mode == "hrv":
+                # More stuff
+                pass
+            
+
             old_y = y
             oled.show()
 
-            # PPI Measuring
+            ### PPI Measuring ###
             if hr_datapoint > threshold:
                 detecting = True
                 # if hr_datapoint > current_max:
@@ -149,8 +173,8 @@ def hr_monitor(ReturnBtn, mode: str):
                 #MEAN PPI, MEAN HR, RMSSD, SDNN
                 mean_ppi = sum(ppi_list) / len(ppi_list)
                 mean_bpm = sum(mean_bpm_list) / len(mean_bpm_list)
-                sd = sdnn(ppi_list)
-                rm = rmssd(mean_bpm_list)
+                sd = hrv.sdnn(ppi_list)
+                rm = hrv.rmssd(mean_bpm_list)
                 
                 print("[AVG_PPI]: ", mean_ppi, "ms")
                 print("[AVG_BPM]: ", mean_bpm, "/s")
