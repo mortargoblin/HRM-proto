@@ -36,9 +36,8 @@ images = [
         0x1f, 0xff, 0x80, 0x07, 0xff, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),   
 ]
 
-def get_hr(interval: float = 0):
+def get_hr():
     HR_Raw = ADC(Pin(27, Pin.IN))
-    time.sleep(interval)
     return int( HR_Raw.read_u16() )
 
 def menu(state: int):
@@ -85,7 +84,8 @@ def hr_monitor(ReturnBtn, graph: bool = False):
     while not ReturnBtn.pressed:
         oled.fill(0)
         for x in range(Screen.width):
-            hr_datapoint = get_hr(0)
+            hr_datapoint = get_hr()
+            
             if graph:
                 y = int( Screen.height - (hr_datapoint / 65536 * Screen.height ) )
                 if y > old_y:
