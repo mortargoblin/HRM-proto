@@ -73,12 +73,18 @@ def menu(state: int):
 
     oled.show()
 
-def hr_monitor(ReturnBtn, graph: bool, mode: str):
+def calculate_bpm(ppi_list: list[int]):
+    if len(ppi_list) < 5:
+        raise RuntimeError("List too short")
+
+    return 60000 / (sum(ppi_list[-5:]) / 5)
+
+def hr_monitor(ReturnBtn, mode: str):
     timer = Piotimer(freq=1000, callback=lambda t: setattr(t, "count", t.count+1))
     timer.count = 0
     detecting = False
-    current_max = 0
-    THRESHOLD = 65536 / 2
+    current_max = 1
+    threshold = 65536 / 2 + 1600
     ppi_list = []
     mean_bpm_list = []
 
@@ -93,26 +99,26 @@ def hr_monitor(ReturnBtn, graph: bool, mode: str):
         for x in range(Screen.width):
             hr_buffer.put(get_hr())
             hr_datapoint = hr_buffer.get()
+            print(hr_datapoint)
             
-            if graph:
-                y = int( Screen.height - (hr_datapoint / 65536 * Screen.height ) )
-                if y > old_y:
-                    for i in range(y - old_y):
-                        oled.pixel(x, old_y+i, Screen.color)
-                elif y < old_y:
-                    for i in range(abs(old_y) - abs(y)):
-                        oled.pixel(x, old_y-i, Screen.color)
-                else:
-                    oled.pixel(x, y, Screen.color)
+            y = int( Screen.height - (hr_datapoint / 65536 * Screen.height ) )
+            if y > old_y:
+                for i in range(y - old_y):
+                    oled.pixel(x, old_y+i, Screen.color)
+            elif y < old_y:
+                for i in range(abs(old_y) - abs(y)):
+                    oled.pixel(x, old_y-i, Screen.color)
+            else:
+                oled.pixel(x, y, Screen.color)
 
-                old_y = y
-                oled.show()
+            old_y = y
+            oled.show()
 
             # PPI Measuring
-            if hr_datapoint > THRESHOLD:
+            if hr_datapoint > threshold:
                 detecting = True
-                if hr_datapoint > current_max:
-                    current_max = hr_datapoint
+                # if hr_datapoint > current_max:
+                #    current_max = hr_datapoint
 
             else:
                 if detecting:
@@ -123,7 +129,8 @@ def hr_monitor(ReturnBtn, graph: bool, mode: str):
                         ppi_list.append(timer.count)
                         timer.count = 0
                         if len(ppi_list) > 5:
-                            bpm = 60000 / (sum(ppi_list[-5:]) / 5)
+                            ppi_list.pop(0)
+                            bpm = calculate_bpm(ppi_list)
                             print("bpm:", bpm)
 
             if ReturnBtn.pressed:

@@ -45,10 +45,10 @@ def main():
 def launch(option: int):
     if option == MenuState.HR_DISPLAY:
         # launch HR_DISPLAY
-        hrlib.hr_monitor(ReturnBtn, True, "hr")
+        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode ="hr")
 
     elif option == MenuState.HRV:
-        hrlib.hr_monitor(ReturnBtn, True, "hrv")
+        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode = "hrv")
   
 
     elif option == MenuState.HISTORY:
