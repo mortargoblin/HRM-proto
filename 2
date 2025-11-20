@@ -83,36 +83,32 @@ def calculate_bpm(ppi_list: list[int]):
 
 def draw_stats(x: int, y:int, stats):
 
-    font_width = 8
     width = 0
-    height = 10
+    height = 13
 
     for key, value in stats.items():
-        width += len(key) * font_width + 30
+        width += len(key) * 6 + 30
 
     oled.fill_rect(
-            x,
-            y,
-            width,
-            height,
-            Screen.color
-            )
+            x - width // 2,
+            y - height // 2,
+            width, height, Screen.color)
 
     offset = 0
     for key, value in stats.items():
         oled.text(
                 str(key),
-                x + offset,
-                y + 1,
+                x - 12 + offset,
+                y - 4,
                 Screen.black
                 )
         oled.text(
                 str(value),
-                x + offset + len(key) * font_width + 3,
-                y + 1,
+                x - 12 + len(key) * 6,
+                y - 4,
                 Screen.black
                 )
-        offset += len(key) * font_width + 30
+        offset += len(key) * 6 + 30
 
 def hr_monitor(ReturnBtn, mode: str):
     timer = Piotimer(freq=1000, callback=lambda t: setattr(t, "count", t.count+1))
@@ -123,8 +119,6 @@ def hr_monitor(ReturnBtn, mode: str):
     ppi_list = []
     mean_bpm_list = []
     bpm = 0
-    mean_bpm = 0
-    mean_ppi = 0
 
     hr_buffer = Fifo(size=5)
     start_time = time.time()
@@ -150,8 +144,19 @@ def hr_monitor(ReturnBtn, mode: str):
             else:
                 oled.pixel(x, y, Screen.color)
 
+            if mode == "hr":
+                # BPM only
+                _x = Screen.width // 2
+                _y = Screen.height // 2 + 20
+                draw_stats(_x, _y, bpm)
+
+            elif mode == "hrv":
+                # More stuff
+                pass
             
+
             old_y = y
+            oled.show()
 
             ### PPI Measuring ###
             if hr_datapoint > threshold:
@@ -179,11 +184,7 @@ def hr_monitor(ReturnBtn, mode: str):
             if ReturnBtn.pressed:
                 break
 
-<<<<<<< HEAD
-            #Final report for hrv mode, values updated every 30 seconds.
-=======
-            # report for hrv mode
->>>>>>> 1cd46a2 (stats generation implemented)
+            #Final report for hrv mode
             if time.time() - start_time >= 30 and mode == "hrv":
                 start_time = time.time()
                 
@@ -198,12 +199,3 @@ def hr_monitor(ReturnBtn, mode: str):
                 print("[SDNN]: ", sd, "ms")
                 print("[RMSSD]: ", rm, "ms")
 
-            # draw stats 
-            if mode == "hrv":
-                # More stuff
-                draw_stats(0, 50, {"BPM": bpm, "AVG_PPI": int(mean_ppi)})
-            else:
-                # BPM only
-                draw_stats(0, 50, {"BPM": bpm})
-
-            oled.show()
