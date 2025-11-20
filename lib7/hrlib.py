@@ -2,7 +2,9 @@ from machine import Pin, I2C, ADC
 from ssd1306 import SSD1306_I2C
 from piotimer import Piotimer
 from fifo import Fifo
-import framebuf, time
+import framebuf, time, math
+from hrv import rmssd, sdnn
+
 class Screen:
     width: int = 128
     height: int = 64
@@ -131,7 +133,11 @@ def hr_monitor(ReturnBtn, mode: str):
                         if len(ppi_list) > 5:
                             ppi_list.pop(0)
                             bpm = calculate_bpm(ppi_list)
-                            print("bpm:", bpm)
+                            mean_bpm_list.append(bpm)
+
+                            if len(mean_bpm_list) > 5:
+                                mean_bpm_list.pop(0)
+                        print("bpm:", bpm)
 
             if ReturnBtn.pressed:
                 break
@@ -139,9 +145,14 @@ def hr_monitor(ReturnBtn, mode: str):
             #Final report for hrv mode
             if time.time() - start_time >= 30 and mode == "hrv":
                 start_time = time.time()
-                break
-        
-        if mode == "hrv":
-            #MEAN PPI, MEAN HR, RMSSD, SDNN
-            ppi_avg = sum(ppi_list) / len(ppi_list)
-            print("ppi_avg:", ppi_avg, "ms")
+                
+                #MEAN PPI, MEAN HR, RMSSD, SDNN
+                mean_ppi = sum(ppi_list) / len(ppi_list)
+                mean_bpm = sum(mean_bpm_list) / len(mean_bpm_list)
+                sd = sdnn(ppi_list)
+                rm = rmssd(mean_bpm_list)
+                
+                print("[AVG_PPI]: ", mean_ppi, "ms")
+                print("[AVG_BPM]: ", mean_bpm, "/s")
+                print("[SDNN]: ", sd, "ms")
+                print("[RMSSD]: ", rm, "ms")
