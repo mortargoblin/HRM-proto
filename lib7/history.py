@@ -1,5 +1,4 @@
-import framebuf, time
-from fifo import Fifo
+import time
 from machine import I2C, Pin
 from ssd1306 import SSD1306_I2C
 from buttons import Encoder
