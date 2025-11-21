@@ -166,7 +166,7 @@ def hr_monitor(ReturnBtn, mode: str):
             if ReturnBtn.pressed:
                 break
 
-            #Final report for hrv mode
+            #Final report for hrv mode, values updated every 30 seconds.
             if time.time() - start_time >= 30 and mode == "hrv":
                 start_time = time.time()
                 

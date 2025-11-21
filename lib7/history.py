@@ -8,7 +8,7 @@ class Screen:
     height: int = 64
     color: int = 1
     black: int = 0
-
+    
 i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
 oled = SSD1306_I2C(Screen.width, Screen.height, i2c)
 
