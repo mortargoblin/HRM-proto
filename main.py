@@ -1,5 +1,5 @@
 from machine import Pin
-from lib7 import buttons, hrlib
+from lib7 import buttons, hrlib, kubios
 import micropython
 
 micropython.alloc_emergency_exception_buf(200)
@@ -18,6 +18,22 @@ NUM_OPTIONS = 4
 
 def main():
     current_state = MenuState.HR_DISPLAY
+
+    # Testing for Wi-Fi connection:
+    print("Connecting to WiFi...")
+    wifi_connected = kubios.mqtt_manager.connect_wifi()
+        
+    if wifi_connected:
+        print("Initializing MQTT...")
+        
+        mqtt_connected = kubios.mqtt_manager.connect()
+        if mqtt_connected:
+            print("MQTT connected successfully!")
+            kubios.mqtt_manager.publish("test", "morjes")
+        else:
+            print("MQTT connection failed")
+    else:
+        print("Cannot connect MQTT - no WiFi connection")
 
     ### MAIN LOOP ###
     while True:
@@ -56,7 +72,15 @@ def launch(option: int):
         pass
         
     elif option == MenuState.KUBIOS:
-        # Launch Kubios anal
+        # # launch Kubios analytics
+        if kubios.enabled:
+            kubios.disable()
+            print("Kubios disabled")
+        else:
+            if kubios.enable():
+                print("Kubios enabled! Data will be sent to cloud")
+            else:
+                print("Failed to enable kubio, check WiFi/MQTT connection")
         return
 
 if __name__=="__main__":

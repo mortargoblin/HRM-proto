@@ -1,17 +1,98 @@
 from umqtt.simple import MQTTClient
+import ubinascii, machine, time, network
 
-WIFI_SSID = 'YourSSID'
-WIFI_PASS = 'YourPassword'
 
-MQTT_BROKER = '192.168.1.10'   # brokerin IP tai hostname
-MQTT_PORT = 1883
-MQTT_USER = 'username'         # jos ei käytössä, laita None
-MQTT_PASS = 'password'         # jos ei käytössä, laita None
-CLIENTID = b'client' + ubinascii.hexlify(machine.unique_id())
 
-TOPIC = b'game/players/player123/state'
-def make_client():
-    if MQTT_USER:
-        return MQTTClient(CLIENT_ID, MQTT_BROKER, port=MQTT_PORT, user=MQTT_USER, password=MQTT_PASS)
-    else:
-        return MQTTClient(CLIENT_ID, MQTT_BROKER, port=MQTT_PORT)
+class MQTTManager:
+    def __init__(self):
+        self.client = None
+        self.connected = False
+        
+        #mqtt Config
+        self.MQTT_BROKER = '192.168.7.253'
+        self.MQTT_PORT = 21883
+        self.MQTT_USER = 'rizvan'
+        self.MQTT_PASS = 'Group_6Group_7'
+        self.CLIENT_ID = b'hr_monitor_' + ubinascii.hexlify(machine.unique_id())
+        
+        #topics
+        self.TOPIC_HR = b'hr_monitor/heart_rate'
+        self.TOPIC_HRV = b'hr_monitor/hrv_data'
+        self.TOPIC_STATUS = b'hr_monitor/status'
+    
+    def connect(self):
+        try:
+            if self.MQTT_USER:
+                self.client = MQTTClient(self.CLIENT_ID, self.MQTT_BROKER, 
+                                       port=self.MQTT_PORT, 
+                                       user=self.MQTT_USER, 
+                                       password=self.MQTT_PASS)
+            else:
+                self.client = MQTTClient(self.CLIENT_ID, self.MQTT_BROKER, 
+                                       port=self.MQTT_PORT)
+            
+            self.client.connect()
+            self.connected = True
+            print("MQTT Connected")
+            self.publish(self.TOPIC_STATUS, b"online")
+            return True
+            
+        except Exception as e:
+            print("MQTT Connection failed:", e)
+            self.connected = False
+            return False
+    
+    def publish(self, topic, message):
+        if not self.connected or not self.client:
+            return False
+            
+        try:
+            self.client.publish(topic, message)
+            return True
+        except Exception as e:
+            print("MQTT Publish failed:", e)
+            self.connected = False
+            return False
+    
+    def disconnect(self):
+        if self.client and self.connected:
+            try:
+                self.publish(self.TOPIC_STATUS, b"offline")
+                self.client.disconnect()
+            except:
+                pass
+            self.connected = False
+    
+    def check_connection(self):
+        if not self.connected:
+            return self.connect()
+        return True
+    
+    def connect_wifi():
+        wlan = network.WLAN(network.STA_IF)
+        wlan.active(True)
+        
+        WIFI_SSID = 'KME_759_Group_7'
+        WIFI_PASS = 'Group_6Group_7'
+        
+        if not wlan.isconnected():
+            print('Connecting to WiFi...')
+            wlan.connect(WIFI_SSID, WIFI_PASS)
+            
+            #Wait for connection
+            for i in range(10):
+                if wlan.isconnected():
+                    break
+                time.sleep(1)
+                print('.', end='')
+            print()
+        
+        if wlan.isconnected():
+            print('WiFi connected!')
+            print('Network config:', wlan.ifconfig())
+            return True
+        else:
+            print('WiFi connection failed')
+            return False
+
+mqtt_manager = MQTTManager()
