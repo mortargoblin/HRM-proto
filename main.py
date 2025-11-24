@@ -1,5 +1,5 @@
 from machine import Pin
-from lib7 import buttons, hrlib, history
+from lib7 import buttons, hrlib
 import micropython
 
 micropython.alloc_emergency_exception_buf(200)
@@ -52,7 +52,8 @@ def launch(option: int):
   
 
     elif option == MenuState.HISTORY:
-        history.get_Med_History(ReturnBtn = ReturnBtn, mode = "hist")    
+        # history.get_Med_History(ReturnBtn = ReturnBtn, mode = "hist")    
+        pass
         
     elif option == MenuState.KUBIOS:
         # Launch Kubios anal
