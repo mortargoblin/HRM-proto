@@ -79,7 +79,40 @@ def calculate_bpm(ppi_list: list[int]):
     if len(ppi_list) < 5:
         raise RuntimeError("List too short")
 
-    return 60000 / (sum(ppi_list[-5:]) / 5)
+    return int(60000 / (sum(ppi_list[-5:]) / 5))
+
+def draw_stats(x: int, y:int, stats):
+
+    font_width = 8
+    width = 0
+    height = 10
+
+    for key, value in stats.items():
+        width += len(key) * font_width + 30
+
+    oled.fill_rect(
+            x,
+            y,
+            width,
+            height,
+            Screen.color
+            )
+
+    offset = 0
+    for key, value in stats.items():
+        oled.text(
+                str(key),
+                x + offset,
+                y + 1,
+                Screen.black
+                )
+        oled.text(
+                str(value),
+                x + offset + len(key) * font_width + 3,
+                y + 1,
+                Screen.black
+                )
+        offset += len(key) * font_width + 30
 
 def hr_monitor(ReturnBtn, mode: str):
     timer = Piotimer(freq=1000, callback=lambda t: setattr(t, "count", t.count+1))
@@ -90,6 +123,8 @@ def hr_monitor(ReturnBtn, mode: str):
     ppi_list = []
     mean_bpm_list = []
     bpm = 0
+    mean_bpm = 0
+    mean_ppi = 0
 
     hr_buffer = Fifo(size=5)
     start_time = time.time()
@@ -115,30 +150,8 @@ def hr_monitor(ReturnBtn, mode: str):
             else:
                 oled.pixel(x, y, Screen.color)
 
-            if mode == "hr":
-                # BPM only
-                _x = Screen.width // 2
-                _y = Screen.height // 2 + 20
-                _width = 30
-                _height = 13
-                oled.fill_rect(
-                        _x - _width // 2,
-                        _y - _height // 2,
-                        _width, _height, Screen.color)
-                oled.text(
-                        str(int(bpm)),
-                        _x - 12,
-                        _y - 4,
-                        Screen.black)
-
-
-            elif mode == "hrv":
-                # More stuff
-                pass
             
-
             old_y = y
-            oled.show()
 
             ### PPI Measuring ###
             if hr_datapoint > threshold:
@@ -159,7 +172,7 @@ def hr_monitor(ReturnBtn, mode: str):
                             bpm = calculate_bpm(ppi_list)
                             mean_bpm_list.append(bpm)
 
-                            if len(mean_bpm_list) > 5:
+                            if len(mean_bpm_list) > 50:
                                 mean_bpm_list.pop(0)
                         print("bpm:", bpm)
 
@@ -167,6 +180,7 @@ def hr_monitor(ReturnBtn, mode: str):
                 break
 
             #Final report for hrv mode, values updated every 30 seconds.
+            # report for hrv mode
             if time.time() - start_time >= 30 and mode == "hrv":
                 start_time = time.time()
                 
@@ -177,6 +191,16 @@ def hr_monitor(ReturnBtn, mode: str):
                 rm = hrv.rmssd(mean_bpm_list)
                 
                 print("[AVG_PPI]: ", mean_ppi, "ms")
-                print("[AVG_BPM]: ", mean_bpm, "/s")
+                print("[AVG_BPM]: ", mean_bpm, "bpm")
                 print("[SDNN]: ", sd, "ms")
                 print("[RMSSD]: ", rm, "ms")
+
+            # draw stats 
+            if mode == "hrv":
+                # More stuff
+                draw_stats(0, 50, {"BPM": bpm, "AVG_PPI": int(mean_ppi)})
+            else:
+                # BPM only
+                draw_stats(0, 50, {"BPM": bpm})
+
+            oled.show()
