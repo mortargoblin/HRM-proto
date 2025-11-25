@@ -22,7 +22,6 @@ def main():
     current_state = MenuState.HR_DISPLAY
 
      # Testing for Wi-Fi connection:
-    print("Connecting to Wi-Fi...")
     wifi_connected = kubios.mqtt_manager.connect_wifi()
         
     if wifi_connected:

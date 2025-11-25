@@ -77,11 +77,12 @@ class MQTTManager:
             wlan.connect(WIFI_SSID, WIFI_PASS)
             
             #Wait for connection
-            for i in range(10):
+            print("Connecting for Wi-Fi", end="")
+            for i in range(5):
                 if wlan.isconnected():
                     break
+                print(".", end="")
                 time.sleep(1)
-                print('.', end='')
             print()
         
         if wlan.isconnected():
