@@ -1,5 +1,5 @@
 from machine import Pin
-from lib7 import buttons, hrlib, kubios, mqtt
+from lib7 import buttons, hrlib, kubios
 import micropython
 
 micropython.alloc_emergency_exception_buf(200)
@@ -12,7 +12,8 @@ class MenuState:
 
 Encoder = buttons.Encoder(10, 11, 12)
 ReturnBtn = buttons.Return(9, Pin.IN, Pin.PULL_UP)
-Mqtt_broker = mqtt.MQTTManager()
+Kubios = kubios.KubiosAnalytics()
+
 # sw_0 = Pin(9, mode = Pin.IN, pull = Pin.PULL_UP)
 
 NUM_OPTIONS = 4
@@ -20,21 +21,16 @@ NUM_OPTIONS = 4
 def main():
     current_state = MenuState.HR_DISPLAY
 
-    # Testing for Wi-Fi connection:
+     # Testing for Wi-Fi connection:
     print("Connecting to Wi-Fi...")
-    wifi_connected = Mqtt_broker.connect_wifi()
+    wifi_connected = kubios.mqtt_manager.connect_wifi()
         
     if wifi_connected:
-        print("Initializing MQTT...")
+        print("Connected to a Wi-Fi.")
         
-        mqtt_connected = Mqtt_broker.connect()
-        if mqtt_connected:
-            print("MQTT connected successfully!")
-            kubios.mqtt_manager.publish("test", "[Connected]")
-        else:
-            print("MQTT connection failed")
     else:
-        print("Cannot connect MQTT - no WiFi connection")
+        print("Cannot connect to a Wi-Fi.")
+
 
     ### MAIN LOOP ###
     while True:
@@ -73,16 +69,15 @@ def launch(option: int):
         pass
         
     elif option == MenuState.KUBIOS:
-        # # launch Kubios analytics
-        if kubios.enabled:
+        #launch Kubios analytics
+        if Kubios.enabled:
             kubios.disable()
             print("Kubios disabled")
         else:
-            if kubios.enable():
+            if Kubios.enable():
                 print("Kubios enabled! Data will be sent to cloud")
             else:
-                print("Failed to enable kubio, check WiFi/MQTT connection")
-        return
+                print("Failed to enable kubios, check WiFi/MQTT connection")
 
 if __name__=="__main__":
     main()
