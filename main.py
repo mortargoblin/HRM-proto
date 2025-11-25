@@ -1,5 +1,5 @@
 from machine import Pin
-from lib7 import buttons, hrlib, kubios
+from lib7 import buttons, hrlib, kubios, mqtt
 import micropython
 
 micropython.alloc_emergency_exception_buf(200)
@@ -12,6 +12,7 @@ class MenuState:
 
 Encoder = buttons.Encoder(10, 11, 12)
 ReturnBtn = buttons.Return(9, Pin.IN, Pin.PULL_UP)
+Mqtt_broker = mqtt.MQTTManager()
 # sw_0 = Pin(9, mode = Pin.IN, pull = Pin.PULL_UP)
 
 NUM_OPTIONS = 4
@@ -20,16 +21,16 @@ def main():
     current_state = MenuState.HR_DISPLAY
 
     # Testing for Wi-Fi connection:
-    print("Connecting to WiFi...")
-    wifi_connected = kubios.mqtt_manager.connect_wifi()
+    print("Connecting to Wi-Fi...")
+    wifi_connected = Mqtt_broker.connect_wifi()
         
     if wifi_connected:
         print("Initializing MQTT...")
         
-        mqtt_connected = kubios.mqtt_manager.connect()
+        mqtt_connected = Mqtt_broker.connect()
         if mqtt_connected:
             print("MQTT connected successfully!")
-            kubios.mqtt_manager.publish("test", "morjes")
+            kubios.mqtt_manager.publish("test", "[Connected]")
         else:
             print("MQTT connection failed")
     else:
@@ -68,7 +69,7 @@ def launch(option: int):
   
 
     elif option == MenuState.HISTORY:
-        # history.get_Med_History(ReturnBtn = ReturnBtn, mode = "hist")    
+        #hrlib.get_Med_History(ReturnBtn = ReturnBtn, Encoder = Encoder, mode = "hist")    
         pass
         
     elif option == MenuState.KUBIOS:

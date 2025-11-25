@@ -1,6 +1,9 @@
 import json
 import time
-from mqtt import mqtt_manager
+from lib7 import mqtt
+
+#Vaiha tää sitten ku toimii mode niin siten, että pusketaan muuttujaan ja ei tarvi luoda tässä sisällä.
+mqtt_manager = mqtt.MQTTManager()
 
 class KubiosAnalytics:
     def __init__(self):
@@ -16,11 +19,11 @@ class KubiosAnalytics:
             print("Failed to enable Kubios - MQTT not connected")
             return False
     
-    def disable(self):#disable kubios cloud services
+    def disable(self): #disable kubios cloud services
         self.enabled = False
         print("Kubios analytics disabled")
     
-    def send_hr_data(self, bpm, ppi_list=None):#append heart rate data to Kubios
+    def send_hr_data(self, bpm, ppi_list=None): #append heart rate data to Kubios
         if not self.enabled:
             return False
             

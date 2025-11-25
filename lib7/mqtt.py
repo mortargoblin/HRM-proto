@@ -68,7 +68,7 @@ class MQTTManager:
             return self.connect()
         return True
     
-    def connect_wifi():
+    def connect_wifi(self):
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
         
@@ -76,7 +76,6 @@ class MQTTManager:
         WIFI_PASS = 'Group_6Group_7'
         
         if not wlan.isconnected():
-            print('Connecting to WiFi...')
             wlan.connect(WIFI_SSID, WIFI_PASS)
             
             #Wait for connection
@@ -94,5 +93,3 @@ class MQTTManager:
         else:
             print('WiFi connection failed')
             return False
-
-mqtt_manager = MQTTManager()

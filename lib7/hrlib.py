@@ -2,6 +2,7 @@ from machine import Pin, I2C, ADC
 from ssd1306 import SSD1306_I2C
 from piotimer import Piotimer
 from fifo import Fifo
+from filefifo import Filefifo
 import framebuf, time, math
 from lib7 import hrv
 
@@ -114,7 +115,7 @@ def draw_stats(x: int, y:int, stats):
                 )
         offset += len(key) * font_width + 30
 
-def hr_monitor(ReturnBtn, mode: str):
+def hr_monitor(ReturnBtn,mode: str):
     timer = Piotimer(freq=1000, callback=lambda t: setattr(t, "count", t.count+1))
     timer.count = 0
     detecting = False
@@ -190,17 +191,72 @@ def hr_monitor(ReturnBtn, mode: str):
                 sd = hrv.sdnn(ppi_list)
                 rm = hrv.rmssd(mean_bpm_list)
                 
+                data = {"avg_ppi" : mean_ppi,
+                        "avg_bpm" : mean_bpm,
+                        "sdnn" : sd,
+                        "rmssd": rm}
+                
                 print("[AVG_PPI]: ", mean_ppi, "ms")
                 print("[AVG_BPM]: ", mean_bpm, "bpm")
                 print("[SDNN]: ", sd, "ms")
                 print("[RMSSD]: ", rm, "ms")
-
+                
             # draw stats 
             if mode == "hrv":
                 # More stuff
                 draw_stats(0, 50, {"BPM": bpm, "AVG_PPI": int(mean_ppi)})
+                
             else:
                 # BPM only
                 draw_stats(0, 50, {"BPM": bpm})
 
             oled.show()
+
+def update_Display(records: dict, counter: int):
+    oled.fill(0)   
+    oled.text("[History]", 28, 0,  1)
+    oled.text("<", 0, 32)
+    oled.text(">", 120, 32)
+    oled.show()
+
+    values = records[f"Patient[{counter}]"]
+    
+    for i in range(len(values)):
+        time.sleep(0.25)
+        oled.text(values[i], 28, 20 +(8*i))
+        oled.show()
+
+def get_Med_History(ReturnBtn: object, Encoder, mode: str):
+    records = {}
+    counter = 1
+
+    oled.fill(0)
+    oled.show()
+
+    files = Filefifo(5, name = "history_files.txt")
+
+    # !THE INPUT DATA FOR THE DICTIONARY MUST BE A LIST OF VALUES!
+    for i in range(5):
+        if files.has_data():
+            record = files.get()
+            records.update({f"Patient[{i+1}]" : record})
+
+    #First Record Displayed:
+    update_Display(records, 1)
+
+    while not ReturnBtn.pressed:
+        rot = Encoder(10, 11, 12)
+
+        if rot.fifo.has_data():
+            rotator = rot.fifo.get()
+
+            if rotator == 1 and 1 <= counter < 5:
+                counter += 1
+                update_Display(records, counter)   
+                
+            elif rotator == -1 and 1 < counter <= 5:
+                counter -= 1
+                update_Display(records, counter)
+
+        if ReturnBtn.pressed:
+            break
