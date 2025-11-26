@@ -192,14 +192,14 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                 sd = hrv.sdnn(ppi_list)
                 rm = hrv.rmssd(mean_bpm_list)
                 
+                #Data published to MQTT every 30 seconds:
                 data: dict[str, float | int] = {
                         "avg_ppi" : mean_ppi,
                         "avg_bpm" : mean_bpm,
                         "sdnn" : sd,
                         "rmssd": rm
                         }
-                
-                Mqtt.publish("test", data)
+                Mqtt.publish(f"{Mqtt.TOPIC_HRV}", f"{data}")
 
             # draw stats 
             if mode == "hrv":
