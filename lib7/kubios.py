@@ -1,10 +1,13 @@
+from lib7.mqtt import MQTTManager
+
+
 import json
 import time
 from lib7 import mqtt
-
 mqtt_manager = mqtt.MQTTManager()
 
 class KubiosAnalytics:
+    
     def __init__(self):
         self.enabled: bool = False
         self.data_buffer = []

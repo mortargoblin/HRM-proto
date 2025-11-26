@@ -1,3 +1,4 @@
+from lib7 import mqtt
 from machine import Pin, I2C, ADC 
 from ssd1306 import SSD1306_I2C
 from piotimer import Piotimer
@@ -115,7 +116,7 @@ def draw_stats(x: int, y:int, stats):
                 )
         offset += len(key) * font_width + 30
 
-def hr_monitor(ReturnBtn, mode: str, Kubios):
+def hr_monitor(ReturnBtn, mode: str, Mqtt):
     timer = Piotimer(freq=1000, callback=lambda t: setattr(t, "count", t.count+1))
     timer.count = 0
     detecting = False
@@ -198,7 +199,7 @@ def hr_monitor(ReturnBtn, mode: str, Kubios):
                         "rmssd": rm
                         }
                 
-                Kubios.mqtt_manager.publish("test", data)
+                Mqtt.publish("test", data)
 
             # draw stats 
             if mode == "hrv":

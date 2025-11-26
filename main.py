@@ -1,5 +1,5 @@
 from machine import Pin
-from lib7 import buttons, hrlib, kubios
+from lib7 import buttons, hrlib, kubios, mqtt
 import micropython
 
 micropython.alloc_emergency_exception_buf(200)
@@ -13,6 +13,7 @@ class MenuState:
 Encoder = buttons.Encoder(10, 11, 12)
 ReturnBtn = buttons.Return(9, Pin.IN, Pin.PULL_UP)
 Kubios = kubios.KubiosAnalytics()
+Mqtt = mqtt.MQTTManager()
 
 # sw_0 = Pin(9, mode = Pin.IN, pull = Pin.PULL_UP)
 
@@ -61,10 +62,10 @@ def main():
 def launch(option: int):
     if option == MenuState.HR_DISPLAY:
         # launch HR_DISPLAY
-        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode ="hr", Kubios = Kubios)
+        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode ="hr", Mqtt = Mqtt)
 
     elif option == MenuState.HRV:
-        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode = "hrv", Kubios = Kubios)
+        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode = "hrv", Mqtt = Mqtt)
   
     
     elif option == MenuState.HISTORY:
