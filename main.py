@@ -62,7 +62,7 @@ def launch(option: int):
     elif option == MenuState.HRV:
         hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode = "hrv", Kubios=Kubios)
   
-
+    
     elif option == MenuState.HISTORY:
         #hrlib.get_Med_History(ReturnBtn = ReturnBtn, Encoder = Encoder, mode = "hist")    
         pass
