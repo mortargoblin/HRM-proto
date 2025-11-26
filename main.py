@@ -26,7 +26,11 @@ def main():
         
     if wifi_connected:
         print("Connected to a Wi-Fi.")
-        
+        print("Initiating MQTT Client.")
+        k_activation: bool = kubios.mqtt_manager.connect()
+
+        if k_activation:
+            print("MQTT Initiation successful, all features available.")
     else:
         print("Cannot connect to a Wi-Fi.")
 

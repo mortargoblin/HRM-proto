@@ -9,7 +9,7 @@ class MQTTManager:
         #mqtt Config
         self.MQTT_BROKER = '192.168.7.253'
         self.MQTT_PORT = 21883
-        self.MQTT_USER = 'rizvan'
+        self.MQTT_USER = 'sami'
         self.MQTT_PASS = 'Group_6Group_7'
         self.CLIENT_ID = b'hr_monitor_' + ubinascii.hexlify(machine.unique_id())
         
@@ -42,7 +42,8 @@ class MQTTManager:
     
     def publish(self, topic, message):
         if not self.connected or not self.client:
-            print("[MQTT Client not found or no connection to internet]")
+            self.connect()
+            
             
         try:
             self.client.publish(topic, message)
