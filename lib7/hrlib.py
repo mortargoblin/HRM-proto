@@ -116,7 +116,7 @@ def draw_stats(x: int, y:int, stats):
                 )
         offset += len(key) * font_width + 30
 
-def hr_monitor(ReturnBtn, mode: str, Kubios: KubiosAnalytics):
+def hr_monitor(ReturnBtn, mode: str):
     timer = Piotimer(freq=1000, callback=lambda t: setattr(t, "count", t.count+1))
     timer.count = 0
     detecting = False
