@@ -57,10 +57,10 @@ def main():
 def launch(option: int):
     if option == MenuState.HR_DISPLAY:
         # launch HR_DISPLAY
-        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode ="hr")
+        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode ="hr", Kubios=Kubios)
 
     elif option == MenuState.HRV:
-        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode = "hrv")
+        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode = "hrv", Kubios=Kubios)
   
 
     elif option == MenuState.HISTORY:
@@ -70,7 +70,7 @@ def launch(option: int):
     elif option == MenuState.KUBIOS:
         #launch Kubios analytics
         if Kubios.enabled:
-            kubios.disable()
+            Kubios.disable()
             print("Kubios disabled")
         else:
             if Kubios.enable():
