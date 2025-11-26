@@ -1,4 +1,4 @@
-from lib7.kubios import KubiosAnalytics, mqtt_manager
+from lib7 import kubios
 from machine import Pin, I2C, ADC 
 from ssd1306 import SSD1306_I2C
 from piotimer import Piotimer
@@ -200,7 +200,7 @@ def hr_monitor(ReturnBtn, mode: str):
                         }
                 
                 print(data)
-                mqtt_manager.publish(mqtt_manager.TOPIC_HRV, data)
+                kubios.mqtt_manager.publish(topic=kubios.mqtt_manager.TOPIC_HRV, message=data)
                 
             # draw stats 
             if mode == "hrv":
