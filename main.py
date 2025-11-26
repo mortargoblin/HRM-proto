@@ -12,9 +12,7 @@ class MenuState:
 
 Encoder = buttons.Encoder(10, 11, 12)
 ReturnBtn = buttons.Return(9, Pin.IN, Pin.PULL_UP)
-Kubios = kubios.KubiosAnalytics()
 Mqtt = mqtt.MQTTManager()
-
 # sw_0 = Pin(9, mode = Pin.IN, pull = Pin.PULL_UP)
 
 NUM_OPTIONS = 4
@@ -74,7 +72,7 @@ def launch(option: int):
         
     elif option == MenuState.KUBIOS:
         #launch Kubios analytics
-        if Kubios.enabled:
+        """if Kubios.enabled:
             Kubios.disable()
             print("Kubios disabled")
         else:
@@ -82,6 +80,7 @@ def launch(option: int):
                 print("Kubios enabled! Data will be sent to cloud")
             else:
                 print("Failed to enable kubios, check WiFi/MQTT connection")
-
+        """
+        pass
 if __name__=="__main__":
     main()
