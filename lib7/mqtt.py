@@ -14,9 +14,9 @@ class MQTTManager:
         self.CLIENT_ID = b'hr_monitor_' + ubinascii.hexlify(machine.unique_id())
         
         #topics
-        self.TOPIC_HR = b'hr_monitor/heart_rate'
-        self.TOPIC_HRV = b'hr_monitor/hrv_data'
-        self.TOPIC_STATUS = b'hr_monitor/status'
+        self.TOPIC_HR = 'hr_monitor/heart_rate'
+        self.TOPIC_HRV = 'hr_monitor/hrv_data'
+        self.TOPIC_STATUS = 'hr_monitor/status'
     
     def connect(self):
         try:
@@ -42,15 +42,16 @@ class MQTTManager:
     
     def publish(self, topic, message):
         if not self.connected or not self.client:
-            return False
+            print("[MQTT Client not found or no connection to internet]")
             
         try:
             self.client.publish(topic, message)
-            return True
+            print("Publish successful.")
+            
         except Exception as e:
             print("MQTT Publish failed:", e)
             self.connected = False
-            return False
+            
     
     def disconnect(self):
         if self.client and self.connected:

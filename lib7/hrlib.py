@@ -199,9 +199,7 @@ def hr_monitor(ReturnBtn, mode: str):
                         "rmssd": rm
                         }
                 
-                print(data)
                 kubios.mqtt_manager.publish(topic=kubios.mqtt_manager.TOPIC_HRV, message=data)
-                
             # draw stats 
             if mode == "hrv":
                 # More stuff
