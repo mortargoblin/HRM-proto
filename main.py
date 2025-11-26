@@ -20,16 +20,13 @@ NUM_OPTIONS = 4
 def main():
     current_state = MenuState.HR_DISPLAY
 
-     # Testing for Wi-Fi connection:
+    # Testing for Wi-Fi connection:
     wifi_connected = kubios.mqtt_manager.connect_wifi()
         
     if wifi_connected:
-        print("Connected to a Wi-Fi.")
-        print("Initiating MQTT Client.")
-        k_activation: bool = kubios.mqtt_manager.connect()
-
+        k_activation = Mqtt.connect_mqtt()
         if k_activation:
-            print("MQTT Initiation successful, all features available.")
+            print("MQTT: OK\nWIFI: OK" )    
     else:
         print("Cannot connect to a Wi-Fi.")
 

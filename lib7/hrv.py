@@ -25,3 +25,4 @@ def sdnn(ppi):
 
     variance = var_sum / (len(ppi) - 1)
     return round(math.sqrt(variance))
+

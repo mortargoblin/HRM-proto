@@ -18,7 +18,7 @@ class MQTTManager:
         self.TOPIC_HRV = 'hr_monitor/hrv_data'
         self.TOPIC_STATUS = 'hr_monitor/status'
     
-    def connect(self):
+    def connect_mqtt(self):
         try:
             if self.MQTT_USER:
                 self.client = MQTTClient(self.CLIENT_ID, self.MQTT_BROKER, 
@@ -31,7 +31,6 @@ class MQTTManager:
             
             self.client.connect()
             self.connected = True
-            print("MQTT Connected")
             self.publish(self.TOPIC_STATUS, b"online")
             return True
             
@@ -42,8 +41,7 @@ class MQTTManager:
     
     def publish(self, topic, message):
         if not self.connected or not self.client:
-            self.connect()
-            
+            self.connect_mqtt()
             
         try:
             self.client.publish(topic, message)
@@ -62,11 +60,6 @@ class MQTTManager:
             except:
                 pass
             self.connected = False
-    
-    def check_connection(self):
-        if not self.connected:
-            return self.connect()
-        return True
     
     def connect_wifi(self):
         wlan = network.WLAN(network.STA_IF)
