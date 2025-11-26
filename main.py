@@ -12,6 +12,7 @@ class MenuState:
 
 Encoder = buttons.Encoder(10, 11, 12)
 ReturnBtn = buttons.Return(9, Pin.IN, Pin.PULL_UP)
+Kubios = kubios.KubiosAnalytics()
 Mqtt = mqtt.MQTTManager()
 
 # sw_0 = Pin(9, mode = Pin.IN, pull = Pin.PULL_UP)
