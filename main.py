@@ -7,8 +7,8 @@ micropython.alloc_emergency_exception_buf(200)
 class MenuState:
     HR_DISPLAY: int = 0
     HRV: int = 1
-    HISTORY: int = 2
-    KUBIOS: int = 3
+    KUBIOS: int = 2
+    HISTORY: int = 3
 
 Encoder = buttons.Encoder(10, 11, 12)
 ReturnBtn = buttons.Return(9, Pin.IN, Pin.PULL_UP)
@@ -60,12 +60,7 @@ def launch(option: int):
         hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode ="hr", Mqtt = Mqtt)
 
     elif option == MenuState.HRV:
-        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode = "hrv", Mqtt = Mqtt)
-  
-    
-    elif option == MenuState.HISTORY:
-        #hrlib.get_Med_History(ReturnBtn = ReturnBtn, Encoder = Encoder, mode = "hist")    
-        pass
+        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode = "hrv", Mqtt = Mqtt)  
         
     elif option == MenuState.KUBIOS:
         #launch Kubios analytics
@@ -79,5 +74,9 @@ def launch(option: int):
                 print("Failed to enable kubios, check WiFi/MQTT connection")
         """
         pass
+
+    elif option == MenuState.HISTORY:
+        hrlib.get_Med_History(ReturnBtn = ReturnBtn, Encoder = Encoder)
+
 if __name__=="__main__":
     main()

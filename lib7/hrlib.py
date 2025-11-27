@@ -193,12 +193,13 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                 rm = hrv.rmssd(mean_bpm_list)
                 
                 #Data published to MQTT every 30 seconds:
-                data: dict[str, float | int] = {
-                        "avg_ppi" : mean_ppi,
-                        "avg_bpm" : mean_bpm,
-                        "sdnn" : sd,
-                        "rmssd": rm
-                        }
+                data: list[str, float | int] = [
+                        f"AVG_BPM: {mean_bpm}", 
+                        f"AVG_PPI: {mean_ppi}", 
+                        f"RMSSD: {rm}", 
+                        f"SDNN: {sd}"
+                ]
+
                 Mqtt.publish(f"{Mqtt.TOPIC_HRV}", f"{data}")
 
             # draw stats 
@@ -212,9 +213,11 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
 
             oled.show()
 
+#History functions:
 def update_Display(records: dict, counter: int):
     oled.fill(0)   
-    oled.text("[History]", 28, 0,  1)
+    oled.text("[History]", 0, 0,  1)
+    oled.text(f"[P-{counter}]", 90, 0, 1)
     oled.text("<", 0, 32)
     oled.text(">", 120, 32)
     oled.show()
@@ -223,32 +226,36 @@ def update_Display(records: dict, counter: int):
     
     for i in range(len(values)):
         time.sleep(0.25)
-        oled.text(values[i], 28, 20 +(8*i))
+        value = values[i].strip("'")
+        oled.text(value, 14, 20 +(8*i))
         oled.show()
 
-def get_Med_History(ReturnBtn: object, Encoder, mode: str):
+def get_Med_History(ReturnBtn: object, Encoder):
     records = {}
     counter = 1
 
     oled.fill(0)
     oled.show()
+    try: 
+        with open('patient_records.txt', 'r') as file:
+            lines = 0
+            for line in file:
+                line = line.strip()
+                line = line[1:-1]
+                record = line.split(", ")
+                records.update({f"Patient[{lines+1}]" : record})          
+                lines += 1
 
-    files = Filefifo(5, name = "history_files.txt")
-
-    # !THE INPUT DATA FOR THE DICTIONARY MUST BE A LIST OF VALUES!
-    for i in range(5):
-        if files.has_data():
-            record = files.get()
-            records.update({f"Patient[{i+1}]" : record})
-
+    except Exception as e:
+        print(f'Error: {e}')
+    
     #First Record Displayed:
     update_Display(records, 1)
 
     while not ReturnBtn.pressed:
-        rot = Encoder(10, 11, 12)
 
-        if rot.fifo.has_data():
-            rotator = rot.fifo.get()
+        if Encoder.fifo.has_data():
+            rotator = Encoder.fifo.get()
 
             if rotator == 1 and 1 <= counter < 5:
                 counter += 1
@@ -260,3 +267,29 @@ def get_Med_History(ReturnBtn: object, Encoder, mode: str):
 
         if ReturnBtn.pressed:
             break
+
+#Storing data into the patient_records.txt file.
+def store_Data(datalist):
+    updated_records = []
+
+    with open('patient_records.txt', 'r+') as file:
+        linecount: int = len(file.readlines())
+        file.seek(0)
+            
+        if linecount > 0:
+            for line in file:
+                line = line.strip()
+                updated_records.append(line)
+            if linecount >= 5:    
+                updated_records.pop(0)
+        updated_records.append(datalist)
+        
+    try:
+        with open('patient_records.txt', 'w') as file:
+            file.write(f'\n'.join(map(str, updated_records)))
+            file.seek(0)
+            print(file.read())
+            
+    except Exception as e:
+        print(f'Error storing data: {e}')
+        
