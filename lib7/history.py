@@ -16,8 +16,14 @@ def update_Display(records: dict, counter: int):
     oled.fill(0)   
     oled.text("[History]", 0, 0,  1)
     oled.text(f"[P-{counter}]", 90, 0, 1)
-    oled.text("<", 0, 32)
-    oled.text(">", 120, 32)
+    
+    if counter == 1:
+        oled.text(">", 120, 32)
+    elif counter in [2, 3, 4]:
+        oled.text("<", 0, 32)
+        oled.text(">", 120, 32)
+    else:
+        oled.text("<", 0, 32)
     oled.show()
 
     values = records[f"Patient[{counter}]"]
