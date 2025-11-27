@@ -6,6 +6,7 @@ from fifo import Fifo
 from filefifo import Filefifo
 import framebuf, time, math
 from lib7 import hrv
+from lib7 import menu_icons
 
 class Screen:
     width: int = 128
@@ -17,36 +18,12 @@ i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
 oled = SSD1306_I2C(Screen.width, Screen.height, i2c)
 #timer = Timer(period=10, mode = Timer.PERIODIC, callback = lambda t: print(1))
 
-
-images = [
-    bytearray([ #Heart Rate Mode image
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x0f, 0x00, 0x1f, 0x9f, 0x80, 0x3f, 
-        0xff, 0xc0, 0x3f, 0xff, 0xc0, 0x3e, 0x7f, 0xc0, 0x3c, 0x67, 0xc0, 0x18, 0x23, 0x80, 0x01, 0x08, 
-        0x00, 0x0f, 0x9f, 0x00, 0x0f, 0x9f, 0x00, 0x07, 0xfe, 0x00, 0x03, 0xfc, 0x00, 0x01, 0xf8, 0x00, 
-        0x00, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),  
-    bytearray([ # Advanced mode image
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1b, 0xfd, 0x80, 0x3b, 
-        0xfd, 0xc0, 0x3b, 0xfd, 0xc0, 0x3b, 0x9d, 0xc0, 0x3b, 0x9d, 0xc0, 0x3a, 0x05, 0xc0, 0x3a, 0x05, 
-        0xc0, 0x3b, 0x9d, 0xc0, 0x3b, 0x9d, 0xc0, 0x3b, 0xfd, 0xc0, 0x3b, 0xfd, 0xc0, 0x1b, 0xfd, 0x80, 
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
-    bytearray([ #Kubios Analysis Image
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xf8, 0x00, 0x07, 0xfe, 0x00, 0x0f, 0x0f, 0x00, 0x0f, 
-        0xff, 0x00, 0x0f, 0xff, 0x00, 0x0f, 0xff, 0x00, 0x0f, 0xff, 0x00, 0x0f, 0x9f, 0x00, 0x0f, 0x0f, 
-        0x00, 0x0f, 0x0f, 0x00, 0x0f, 0x9f, 0x00, 0x0f, 0xff, 0x00, 0x0f, 0x0f, 0x00, 0x0e, 0x07, 0x00, 
-        0x0f, 0xff, 0x00, 0x07, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
-    bytearray([ #History image
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0xff, 0x80, 0x1f, 0xff, 0x80, 0x1f, 0xff, 0x80, 0x1f, 
-        0x9f, 0x80, 0x1f, 0x9f, 0x80, 0x1e, 0x07, 0x80, 0x1e, 0x07, 0x80, 0x1f, 0x9f, 0x80, 0x1f, 0x9f, 
-        0x80, 0x1f, 0xff, 0x80, 0x1f, 0xff, 0x80, 0x1f, 0xff, 0x80, 0x18, 0x03, 0x00, 0x18, 0x03, 0x00, 
-        0x1f, 0xff, 0x80, 0x07, 0xff, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),   
-]
-
 def get_hr():
     HR_Raw = ADC(Pin(27, Pin.IN))
     return int( HR_Raw.read_u16() )
 
 def menu(state: int):
-    
+    images = menu_icons.menu_Icons()    
     step_size = 21
     titles = (
             ["[HRM]", "Heart Rate"],
@@ -212,84 +189,3 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                 draw_stats(0, 50, {"BPM": bpm})
 
             oled.show()
-
-#History functions:
-def update_Display(records: dict, counter: int):
-    oled.fill(0)   
-    oled.text("[History]", 0, 0,  1)
-    oled.text(f"[P-{counter}]", 90, 0, 1)
-    oled.text("<", 0, 32)
-    oled.text(">", 120, 32)
-    oled.show()
-
-    values = records[f"Patient[{counter}]"]
-    
-    for i in range(len(values)):
-        time.sleep(0.25)
-        value = values[i].strip("'")
-        oled.text(value, 14, 20 +(8*i))
-        oled.show()
-
-def get_Med_History(ReturnBtn: object, Encoder):
-    records = {}
-    counter = 1
-
-    oled.fill(0)
-    oled.show()
-    try: 
-        with open('patient_records.txt', 'r') as file:
-            lines = 0
-            for line in file:
-                line = line.strip()
-                line = line[1:-1]
-                record = line.split(", ")
-                records.update({f"Patient[{lines+1}]" : record})          
-                lines += 1
-
-    except Exception as e:
-        print(f'Error: {e}')
-    
-    #First Record Displayed:
-    update_Display(records, 1)
-
-    while not ReturnBtn.pressed:
-
-        if Encoder.fifo.has_data():
-            rotator = Encoder.fifo.get()
-
-            if rotator == 1 and 1 <= counter < 5:
-                counter += 1
-                update_Display(records, counter)   
-                
-            elif rotator == -1 and 1 < counter <= 5:
-                counter -= 1
-                update_Display(records, counter)
-
-        if ReturnBtn.pressed:
-            break
-
-#Storing data into the patient_records.txt file.
-def store_Data(datalist):
-    updated_records = []
-
-    with open('patient_records.txt', 'r+') as file:
-        linecount: int = len(file.readlines())
-        file.seek(0)
-            
-        if linecount > 0:
-            for line in file:
-                line = line.strip()
-                updated_records.append(line)
-            if linecount >= 5:    
-                updated_records.pop(0)
-        updated_records.append(datalist)
-        
-    try:
-        with open('patient_records.txt', 'w') as file:
-            file.write(f'\n'.join(map(str, updated_records)))
-            file.seek(0)
-            print(file.read())
-            
-    except Exception as e:
-        print(f'Error storing data: {e}')
-        

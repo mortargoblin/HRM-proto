@@ -1,5 +1,5 @@
 from machine import Pin
-from lib7 import buttons, hrlib, kubios, mqtt
+from lib7 import buttons, hrlib, kubios, mqtt, history
 import micropython
 
 micropython.alloc_emergency_exception_buf(200)
@@ -76,7 +76,7 @@ def launch(option: int):
         pass
 
     elif option == MenuState.HISTORY:
-        hrlib.get_Med_History(ReturnBtn = ReturnBtn, Encoder = Encoder)
+        history.get_Med_History(ReturnBtn = ReturnBtn, Encoder = Encoder)
 
 if __name__=="__main__":
     main()
