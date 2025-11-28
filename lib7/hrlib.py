@@ -171,6 +171,7 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                 
                 #Data published to MQTT every 30 seconds:
                 data: list[str, float | int] = [
+                        f"T: {time.localtime()}" #Pitää muuttaa muotoon (päivä, kuukausi, vuosi -väli- kellonaika)
                         f"AVG_BPM: {mean_bpm}", 
                         f"AVG_PPI: {mean_ppi}", 
                         f"RMSSD: {rm}", 
