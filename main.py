@@ -1,19 +1,20 @@
 from machine import Pin
-from lib7 import buttons, hrlib, kubios, mqtt, history
-import micropython
+from lib7 import buttons, hrlib, kubios, mqtt
+import micropython, framebuf
+import time
 
 micropython.alloc_emergency_exception_buf(200)
 
 class MenuState:
     HR_DISPLAY: int = 0
     HRV: int = 1
-    KUBIOS: int = 2
-    HISTORY: int = 3
+    HISTORY: int = 2
+    KUBIOS: int = 3
 
 Encoder = buttons.Encoder(10, 11, 12)
 ReturnBtn = buttons.Return(9, Pin.IN, Pin.PULL_UP)
 Mqtt = mqtt.MQTTManager()
-# sw_0 = Pin(9, mode = Pin.IN, pull = Pin.PULL_UP)
+Kubios = kubios.KubiosAnalytics()
 
 NUM_OPTIONS = 4
 
@@ -21,12 +22,12 @@ def main():
     current_state = MenuState.HR_DISPLAY
 
     # Testing for Wi-Fi connection:
-    wifi_connected = kubios.mqtt_manager.connect_wifi()
+    wifi_connected = Mqtt.connect_wifi()
         
     if wifi_connected:
-        k_activation = Mqtt.connect_mqtt()
-        if k_activation:
-            print("MQTT: OK\nWIFI: OK" )    
+        mqtt_connected = Mqtt.connect_mqtt()
+        if mqtt_connected:
+            print("MQTT: OK\nWIFI: OK")    
     else:
         print("Cannot connect to a Wi-Fi.")
 
@@ -35,10 +36,8 @@ def main():
     while True:
         hrlib.menu(current_state)
 
-        fifo = int(Encoder.fifo.empty())
-
         # rotary encoder rotation handling
-        if not fifo:
+        if not Encoder.fifo.empty():
             fifo_value = Encoder.fifo.get()
             if fifo_value == 1:
                 current_state = (current_state + 1) % NUM_OPTIONS
@@ -50,33 +49,40 @@ def main():
         if Encoder.pressed:
             launch(current_state)
             Encoder.pressed = False
+            ReturnBtn.pressed = False
 
         if ReturnBtn.pressed:
             ReturnBtn.pressed = False
 
 def launch(option: int):
     if option == MenuState.HR_DISPLAY:
-        # launch HR_DISPLAY
-        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode ="hr", Mqtt = Mqtt)
-
+        hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hr", Mqtt=Mqtt)
+        
     elif option == MenuState.HRV:
-        hrlib.hr_monitor(ReturnBtn = ReturnBtn, mode = "hrv", Mqtt = Mqtt)  
+        hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hrv", Mqtt=Mqtt)
+    
+    elif option == MenuState.HISTORY:
+        from lib7 import history
+        history.get_Med_History(ReturnBtn=ReturnBtn, Encoder=Encoder)
         
     elif option == MenuState.KUBIOS:
-        #launch Kubios analytics
-        """if Kubios.enabled:
+        if Kubios.enabled:
             Kubios.disable()
-            print("Kubios disabled")
+            hrlib.oled.fill(0)
+            hrlib.oled.text("Kubios OFF", 30, 30)
+            hrlib.oled.show()
+            time.sleep(1)
         else:
             if Kubios.enable():
-                print("Kubios enabled! Data will be sent to cloud")
+                hrlib.oled.fill(0)
+                hrlib.oled.text("Kubios ON", 35, 30)
+                hrlib.oled.show()
+                time.sleep(1)
             else:
-                print("Failed to enable kubios, check WiFi/MQTT connection")
-        """
-        pass
-
-    elif option == MenuState.HISTORY:
-        history.get_Med_History(ReturnBtn = ReturnBtn, Encoder = Encoder)
+                hrlib.oled.fill(0)
+                hrlib.oled.text("Connect Err", 25, 30)
+                hrlib.oled.show()
+                time.sleep(1)
 
 if __name__=="__main__":
     main()
