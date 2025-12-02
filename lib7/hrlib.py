@@ -8,11 +8,8 @@ import framebuf, time, math
 from lib7 import hrv
 from lib7 import menu_icons
 
+# mitä vittua?
 class Constants:
-    #Screen
-    SCREEN_WIDTH = 128
-    SCREEN_HEIGHT = 64
-    
     #HR measurement
     ADC_MAX = 65536
     THRESHOLD_BASE = ADC_MAX / 2
@@ -34,8 +31,8 @@ class Constants:
     FONT_WIDTH = 8
     
 class Screen:
-    width: int = Constants.SCREEN_WIDTH
-    height: int = Constants.SCREEN_HEIGHT
+    width: int = 128
+    height: int = 64
     color: int = 1
     black: int = 0
 
@@ -70,11 +67,7 @@ def menu(state: int, show_animation=True):
     title_x = 0
     title_y = 5
     
-    if type(titles[state]) == list:
-        for j, title in enumerate(titles[state]):
-            oled.text(title, title_x, title_y + j*10)
-    else:
-        oled.text(titles[state], title_x, title_y)
+    oled.text(titles[state], title_x, title_y)
     
     arrow_x = int(Constants.MENU_ICON_SPACING / 2 + state * Constants.MENU_ICON_SPACING - 4)
     arrow_y = Constants.MENU_ICON_Y + 20
