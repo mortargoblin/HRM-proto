@@ -27,7 +27,9 @@ def main():
     if wifi_connected:
         mqtt_connected = Mqtt.connect_mqtt()
         if mqtt_connected:
-            print("MQTT: OK\nWIFI: OK")    
+            print("MQTT: OK\nWIFI: OK")  
+        else:
+            print("MQTT: FAIL\nWIFI: OK")  
     else:
         print("Cannot connect to a Wi-Fi.")
 
@@ -62,24 +64,22 @@ def launch(option: int):
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hrv", Mqtt=Mqtt)
         
     elif option == MenuState.KUBIOS:
+        k_status = Kubios.enable()
+        
         if Kubios.enabled:
-            Kubios.disable()
             hrlib.oled.fill(0)
-            hrlib.oled.text("Kubios OFF", 30, 30)
+            hrlib.oled.text(f'{k_status}', 15, 30, 1)
             hrlib.oled.show()
             time.sleep(1)
+            #TÄHÄN FUNKTIOKUTSU
+            Kubios.disable()
+        
         else:
-            if Kubios.enable():
-                hrlib.oled.fill(0)
-                hrlib.oled.text("Kubios ON", 35, 30)
-                hrlib.oled.show()
-                time.sleep(1)
-            else:
-                hrlib.oled.fill(0)
-                hrlib.oled.text("Connect Err", 25, 30)
-                hrlib.oled.show()
-                time.sleep(1)
-    
+            hrlib.oled.fill(0)
+            hrlib.oled.text(f'{k_status}', 15, 30, 1)
+            hrlib.oled.show()
+            time.sleep(1)
+
     elif option == MenuState.HISTORY:
         history.get_Med_History(ReturnBtn=ReturnBtn, Encoder=Encoder)
 

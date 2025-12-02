@@ -12,20 +12,20 @@ class KubiosAnalytics:
     def enable(self):
         try:
             if not self.mqtt_manager.connect_wifi():
-                print("Failed to connect WiFi for Kubios")
-                return False
+                print("Wifi Error occurred.")
+                return "[Wi-fi Error]"
             
             if not self.mqtt_manager.connect_mqtt():
-                print("Failed to connect MQTT for Kubios")
-                return False
+                print("Kubios not connected due to an MQTT Error.")
+                return "[MQTT Error]"
             
             self.enabled = True
-            print("Kubios analytics enabled")
-            return True
+            print("Kubios ON")
+            return "[Kubios ON]"
         
         except Exception as e:
-            print(f"Failed to enable Kubios: {e}")
-            return False
+            print(f"Exception occurred: {e}")
+            return "[SYS ERROR]"
     
     def disable(self): #disable kubios cloud services
         self.enabled = False
