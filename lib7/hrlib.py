@@ -1,4 +1,4 @@
-from lib7 import mqtt
+from lib7 import mqtt, history
 from machine import Pin, I2C, ADC 
 from ssd1306 import SSD1306_I2C
 from piotimer import Piotimer
@@ -241,23 +241,21 @@ def hr_monitor(ReturnBtn, mode, Mqtt):
                 time_str = f"{now_time[2]:02d}/{now_time[1]:02d}"
                 
                 data = [
-                    time_str,
+                    f"T: {time_str}",
                     f"AVG_BPM: {avg_bpm}", 
                     f"AVG_PPI: {int(avg_ppi)}", 
                     f"RMSSD: {rm_val:.1f}", 
                     f"SDNN: {sd_val:.1f}"
                 ]
                 
-                try:
-                    from lib7 import history
-                    history.store_Data(data)
-                except:
-                    pass
+                #Storing data to the patient_records.txt file:
+                history.store_Data(data)
                 
                 try:
                     Mqtt.publish(f"{Mqtt.TOPIC_HRV}", str(data))
-                except:
-                    pass
+                
+                except Exception as e:
+                    print(f"Exception occurred: {e}")
             
             hrv_time = time.time()
         

@@ -1,5 +1,5 @@
 from machine import Pin
-from lib7 import buttons, hrlib, kubios, mqtt
+from lib7 import buttons, hrlib, kubios, mqtt, history
 import micropython, framebuf
 import time
 
@@ -62,7 +62,6 @@ def launch(option: int):
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hrv", Mqtt=Mqtt)
     
     elif option == MenuState.HISTORY:
-        from lib7 import history
         history.get_Med_History(ReturnBtn=ReturnBtn, Encoder=Encoder)
         
     elif option == MenuState.KUBIOS:
