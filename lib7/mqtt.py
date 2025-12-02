@@ -1,4 +1,4 @@
-from umqtt.simple import MQTTClient
+from lib7.umqtt.simple import MQTTClient
 import ubinascii, machine, time, network
 
 class MQTTManager:
@@ -9,7 +9,7 @@ class MQTTManager:
         #mqtt Config
         self.MQTT_BROKER = '192.168.7.253'
         self.MQTT_PORT = 21883
-        self.MQTT_USER = 'sami'
+        self.MQTT_USER = 'Rizvan'
         self.MQTT_PASS = 'Group_6Group_7'
         self.CLIENT_ID = b'hr_monitor_' + ubinascii.hexlify(machine.unique_id())
         
@@ -87,3 +87,12 @@ class MQTTManager:
         else:
             print('WiFi connection failed')
             return False
+            
+    def check_connection(self):
+        try:
+            if self.connected and self.client:
+                return True
+            return False
+        except:
+            return False
+

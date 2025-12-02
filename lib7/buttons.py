@@ -1,5 +1,5 @@
 from machine import Pin
-from fifo import Fifo
+from lib7.fifo import Fifo
 import utime
 
 class Encoder:
