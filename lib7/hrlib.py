@@ -1,4 +1,4 @@
-from lib7 import mqtt, history
+from lib7 import mqtt
 from machine import Pin, I2C, ADC 
 from ssd1306 import SSD1306_I2C
 from piotimer import Piotimer
@@ -8,28 +8,6 @@ import framebuf, time, math
 from lib7 import hrv
 from lib7 import menu_icons
 
-# mitä vittua?
-class Constants:
-    #HR measurement
-    ADC_MAX = 65536
-    THRESHOLD_BASE = ADC_MAX / 2
-    THRESHOLD_OFFSET = 1600
-    THRESHOLD = THRESHOLD_BASE + THRESHOLD_OFFSET
-    
-    #Timing
-    MIN_PPI = 250 #ms
-    MAX_PPI = 1500 #ms
-    HRV_INTERVAL = 30 #s
-    PPI_WINDOW_SIZE = 5
-    BPM_WINDOW_SIZE = 50
-    
-    #display
-    MENU_ICON_SIZE = 20
-    MENU_ICON_SPACING = 21
-    MENU_ICON_Y = 40
-    STATS_HEIGHT = 10
-    FONT_WIDTH = 8
-    
 class Screen:
     width: int = 128
     height: int = 64
@@ -44,35 +22,36 @@ def get_hr():
     HR_Raw = ADC(Pin(27, Pin.IN))
     return int( HR_Raw.read_u16() )
 
-def menu(state: int, show_animation=True):
+def menu(state: int):
     images = menu_icons.menu_Icons()    
+    step_size = 21
     titles = (
-        ["[HRM]", "Heart Rate"],
-        ["[HRV]", "Measurements"],
-        ["[Kubios]", "Cloud Services"],
-        ["[Files]", "Medical History"]
-    )
-    
-    oled.fill(0)
-    
-    #box around icon
-    for i in range(len(images)):
-        img = framebuf.FrameBuffer(images[i], 20, 20, framebuf.MONO_HLSB)
-        if i == state:
-            oled.rect(Constants.MENU_ICON_SPACING * i - 1, 
-                     Constants.MENU_ICON_Y - 1, 
-                     22, 22, 1)
-        oled.blit(img, (Constants.MENU_ICON_SPACING * i), Constants.MENU_ICON_Y)
-    
+            ["[HRM]", "Heart Rate"],
+            ["[HRV]", "Measurements"],
+            ["[Kubios]", "Cloud Services"],
+            ["[Files]", "Medical History"]
+            )
+    icon_y = 40
+
+    cursor_x = int(step_size / 2 + state * step_size - 4)
+    cursor_y = icon_y + 20
+
     title_x = 0
     title_y = 5
-    
-    oled.text(titles[state], title_x, title_y)
-    
-    arrow_x = int(Constants.MENU_ICON_SPACING / 2 + state * Constants.MENU_ICON_SPACING - 4)
-    arrow_y = Constants.MENU_ICON_Y + 20
-    oled.text("^", arrow_x, arrow_y)
-    
+
+    oled.fill(0)
+    for i in range(len(images)):
+        img = framebuf.FrameBuffer(images[i], 20, 20, framebuf.MONO_HLSB)
+        oled.blit(img, (step_size * i), icon_y)
+
+    oled.text("^", cursor_x, cursor_y)
+    if type(titles[state]) == list:
+        for title in titles[state]:
+            oled.text(title, title_x, title_y)
+            title_y += 10
+    else:
+        oled.text(titles[state], title_x, title_y)
+
     oled.show()
 
 def calculate_bpm(ppi_list: list[int]):
@@ -113,158 +92,101 @@ def draw_stats(x: int, y:int, stats):
                 Screen.black
                 )
         offset += len(key) * font_width + 30
-        
-def hr_monitor(ReturnBtn, mode, Mqtt):
-    finger_on = False
+
+def hr_monitor(ReturnBtn, mode: str, Mqtt):
+    timer = Piotimer(freq=1000, callback=lambda t: setattr(t, "count", t.count+1))
+    timer.count = 0
+    detecting = False
+    current_max = 1
+    threshold = 65536 / 2 + 1600
+    ppi_list = []
+    mean_bpm_list = []
     bpm = 0
-    
-    hr_fifo = Fifo(size=5)
-    hrv_time = time.time()
-    measure_start = None
-    last_y = Screen.height // 2
-    
-    # Beat detection
-    beat_times = []
-    last_beat_time = 0
-    
-    oled.fill(0)
-    oled.text("Place finger", 30, 30)
-    oled.show()
-    time.sleep(1)
-    
-    ReturnBtn.pressed = False
+    mean_bpm = 0
+    mean_ppi = 0
 
-    while True:
-        if ReturnBtn.pressed:
-            ReturnBtn.pressed = False
-            return
-        
+    hr_buffer = Fifo(size=5)
+    start_time = time.time()
+
+    old_y = Screen.height // 2
+
+    while not ReturnBtn.pressed:
         oled.fill(0)
-        oled.text("Live Signal", 40, 0)
-        
-        signal_min = 65535
-        signal_values = []
-        
-        for x in range(Screen.width):
-            if ReturnBtn.pressed:
-                ReturnBtn.pressed = False
-                return
-            
-            hr_fifo.put(get_hr())
-            hr_val = hr_fifo.get()
-            signal_values.append(hr_val)
-            
-            if hr_val < signal_min:
-                signal_min = hr_val
 
-            inverted_val = 65535 - hr_val
-            y = int(Screen.height - (inverted_val / 65536 * Screen.height))
-            
-            if y > last_y:
-                for i in range(y - last_y):
-                    oled.pixel(x, last_y + i, 1)
-            elif y < last_y:
-                for i in range(last_y - y):
-                    oled.pixel(x, last_y - i, 1)
+        for x in range(Screen.width):
+            hr_buffer.put(get_hr())
+            hr_datapoint = hr_buffer.get()
+            # print(hr_datapoint)
+
+            ### Drawing ###
+            y = int( Screen.height - (hr_datapoint / 65536 * Screen.height ) )
+            if y > old_y:
+                for i in range(y - old_y):
+                    oled.pixel(x, old_y+i, Screen.color)
+            elif y < old_y:
+                for i in range(abs(old_y) - abs(y)):
+                    oled.pixel(x, old_y-i, Screen.color)
             else:
-                oled.pixel(x, y, 1)
-            
-            last_y = y
-        
-        #average
-        avg_signal = sum(signal_values) / len(signal_values)
-        
-        if avg_signal < 1000:
-            if not finger_on:
-                finger_on = True
-                measure_start = time.time()
-                beat_times = []
-                last_beat_time = 0
-                oled.fill(0)
-                oled.text("Measuring", 35, 30)
-                oled.show()
-                time.sleep(0.5)
-        else:
-            finger_on = False
-            bpm = 0
-            measure_start = None
-        
-        if finger_on:
-            current_time = time.ticks_ms()
-            
-            # Detect heartbeat when signal drops below threshold
-            if signal_min < 280:
-                if last_beat_time == 0:
-                    last_beat_time = current_time
-                else:
-                    # calculate time between heartbeats
-                    time_diff = time.ticks_diff(current_time, last_beat_time)
-                    
-                    if 250 < time_diff < 1500:
-                        beat_times.append(time_diff)
-                        last_beat_time = current_time
-                        
-                        #keep only last 5 beats
-                        if len(beat_times) > 5:
-                            beat_times.pop(0)
-                        
-                        # Calculate bpm
-                        if len(beat_times) > 0:
-                            avg_beat = sum(beat_times) / len(beat_times)
-                            bpm = int(60000 / avg_beat)
-            
-            # reset if too long since last beat
-            if last_beat_time > 0:
-                time_since_beat = time.ticks_diff(current_time, last_beat_time)
-                if time_since_beat > 2000:
-                    beat_times = []
-                    last_beat_time = 0
-                    bpm = 0
-        
-        #Final report for hrv mode, values updated every 30 seconds.
-        if mode == "hrv" and finger_on and time.time() - hrv_time >= 30:
-            if len(beat_times) > 1:
-                avg_ppi = sum(beat_times) / len(beat_times)
-                avg_bpm = int(60000 / avg_ppi) if avg_ppi > 0 else 0
-                
-                sd_val = hrv.sdnn(beat_times)
-                rm_val = hrv.rmssd(beat_times)
-                
-                now_time = time.localtime()
-                time_str = f"{now_time[2]:02d}/{now_time[1]:02d}"
-                
+                oled.pixel(x, y, Screen.color)
+
+
+            old_y = y
+
+            ### PPI Measuring ###
+            if hr_datapoint > threshold:
+                detecting = True
+                # if hr_datapoint > current_max:
+                #    current_max = hr_datapoint
+
+            else:
+                if detecting:
+                    detecting = False
+                    if timer.count > 1500:
+                        timer.count = 0
+                    if timer.count > 250:
+                        ppi_list.append(timer.count)
+                        timer.count = 0
+                        if len(ppi_list) > 5:
+                            ppi_list.pop(0)
+                            bpm = calculate_bpm(ppi_list)
+                            mean_bpm_list.append(bpm)
+
+                            if len(mean_bpm_list) > 50:
+                                mean_bpm_list.pop(0)
+                        print("bpm:", bpm)
+
+            if ReturnBtn.pressed:
+                break
+
+            #Final report for hrv mode, values updated every 30 seconds.
+            # report for hrv mode
+            if time.time() - start_time >= 30 and mode == "hrv":
+                start_time = time.time()
+
+                #MEAN PPI, MEAN HR, RMSSD, SDNN
+                mean_ppi = sum(ppi_list) / len(ppi_list)
+                mean_bpm = sum(mean_bpm_list) / len(mean_bpm_list)
+                sd = hrv.sdnn(ppi_list)
+                rm = hrv.rmssd(mean_bpm_list)
+
+                #Data published to MQTT every 30 seconds:
                 data = [
-                    f"T: {time_str}",
-                    f"AVG_BPM: {avg_bpm}", 
-                    f"AVG_PPI: {int(avg_ppi)}", 
-                    f"RMSSD: {rm_val:.1f}", 
-                    f"SDNN: {sd_val:.1f}"
-                ]
-                
-                #Storing data to the patient_records.txt file:
-                history.store_Data(data)
-                
-                try:
-                    Mqtt.publish(f"{Mqtt.TOPIC_HRV}", str(data))
-                
-                except Exception as e:
-                    print(f"Exception occurred: {e}")
-            
-            hrv_time = time.time()
-        
-        #display
-        if not finger_on:
-            oled.text("No finger", 40, 30)
-            bpm = 0
-        else:
-            if measure_start:
-                elapsed = int(time.time() - measure_start)
-                oled.text(f"Time: {elapsed}s", 40, 55)
-        
-        #show BPM
-        if finger_on and bpm > 0:
-            draw_stats(20, 40, {"BPM": bpm})
-        else:
-            draw_stats(20, 40, {"BPM": 0})
-        
-        oled.show()
+                        f"T: {time.localtime()}" #Pitää muuttaa muotoon (päivä, kuukausi, vuosi -väli- kellonaika)
+                        f"AVG_BPM: {mean_bpm}", 
+                        f"AVG_PPI: {mean_ppi}", 
+                        f"RMSSD: {rm}", 
+                        f"SDNN: {sd}"
+                        ]
+
+                Mqtt.publish(f"{Mqtt.TOPIC_HRV}", f"{data}")
+
+            # draw stats 
+            if mode == "hrv":
+                # More stuff
+                draw_stats(0, 50, {"BPM": bpm, "AVG_PPI": int(mean_ppi)})
+
+            else:
+                # BPM only
+                draw_stats(0, 50, {"BPM": bpm})
+
+            oled.show()
