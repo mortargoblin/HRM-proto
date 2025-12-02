@@ -8,8 +8,8 @@ micropython.alloc_emergency_exception_buf(200)
 class MenuState:
     HR_DISPLAY: int = 0
     HRV: int = 1
-    HISTORY: int = 2
-    KUBIOS: int = 3
+    KUBIOS: int = 2
+    HISTORY: int = 3
 
 Encoder = buttons.Encoder(10, 11, 12)
 ReturnBtn = buttons.Return(9, Pin.IN, Pin.PULL_UP)
@@ -60,9 +60,6 @@ def launch(option: int):
         
     elif option == MenuState.HRV:
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hrv", Mqtt=Mqtt)
-    
-    elif option == MenuState.HISTORY:
-        history.get_Med_History(ReturnBtn=ReturnBtn, Encoder=Encoder)
         
     elif option == MenuState.KUBIOS:
         if Kubios.enabled:
@@ -82,6 +79,9 @@ def launch(option: int):
                 hrlib.oled.text("Connect Err", 25, 30)
                 hrlib.oled.show()
                 time.sleep(1)
+    
+    elif option == MenuState.HISTORY:
+        history.get_Med_History(ReturnBtn=ReturnBtn, Encoder=Encoder)
 
 if __name__=="__main__":
     main()
