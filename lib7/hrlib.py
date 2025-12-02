@@ -1,9 +1,9 @@
 from lib7 import mqtt
 from machine import Pin, I2C, ADC 
-from lib7.ssd1306 import SSD1306_I2C
-from lib7.piotimer import Piotimer
-from lib7.fifo import Fifo
-from lib7.filefifo import Filefifo
+from ssd1306 import SSD1306_I2C
+from piotimer import Piotimer
+from fifo import Fifo
+from filefifo import Filefifo
 import framebuf, time, math
 from lib7 import hrv
 from lib7 import menu_icons

@@ -1,4 +1,4 @@
-from lib7.umqtt.simple import MQTTClient
+from umqtt.simple import MQTTClient
 import ubinascii, machine, time, network
 
 class MQTTManager:
