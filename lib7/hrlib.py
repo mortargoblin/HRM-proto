@@ -1,12 +1,10 @@
-from lib7 import mqtt
+from lib7 import mqtt, menu_icons, hrv, history
 from machine import Pin, I2C, ADC 
 from ssd1306 import SSD1306_I2C
 from piotimer import Piotimer
 from fifo import Fifo
 from filefifo import Filefifo
 import framebuf, time, math
-from lib7 import hrv
-from lib7 import menu_icons
 
 class Screen:
     width: int = 128
@@ -168,17 +166,21 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                 mean_bpm = sum(mean_bpm_list) / len(mean_bpm_list)
                 sd = hrv.sdnn(ppi_list)
                 rm = hrv.rmssd(mean_bpm_list)
-
-                #Data published to MQTT every 30 seconds:
+                
+                now_time = time.localtime()
+                time_str = f"{now_time[2]:02d}/{now_time[1]:02d}"
+                    
                 data = [
-                        f"T: {time.localtime()}" #Pitää muuttaa muotoon (päivä, kuukausi, vuosi -väli- kellonaika)
-                        f"AVG_BPM: {mean_bpm}", 
-                        f"AVG_PPI: {mean_ppi}", 
-                        f"RMSSD: {rm}", 
-                        f"SDNN: {sd}"
-                        ]
+                    f"T: {time_str}" 
+                    f"AVG_BPM: {mean_bpm}", 
+                    f"AVG_PPI: {mean_ppi}", 
+                    f"RMSSD: {rm}", 
+                    f"SDNN: {sd}"
+                ]
 
-                Mqtt.publish(f"{Mqtt.TOPIC_HRV}", f"{data}")
+                if Mqtt.connected: #Data published to MQTT every 30 seconds
+                    Mqtt.publish(f"{Mqtt.TOPIC_HRV}", f"{data}")
+                history.store_Data(data)
 
             # draw stats 
             if mode == "hrv":

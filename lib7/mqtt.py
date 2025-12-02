@@ -70,27 +70,14 @@ class MQTTManager:
         
         if not wlan.isconnected():
             wlan.connect(WIFI_SSID, WIFI_PASS)
-            
-            #Wait for connection 
-            # ?????? miksi mun pitää tuijottaa tätä joka kerta kun käynnistän?
-            # sekoan
-            # siirrä muualle. ehkä oma yhdistys-ominaisuus?
-            # p.s. tulisi välttää main-loopin hangaamista ellei "explicitly"
-            # sitä haluta
-            """
-            print("Connecting for Wi-Fi", end="")
-            for i in range(5):
-                if wlan.isconnected():
-                    break
-                print(".", end="")
-                time.sleep(1)
-            print()
-            """
+
         
         if wlan.isconnected():
-            print('WiFi connected!')
+            print('Wi-Fi connected!')
             print('Network config:', wlan.ifconfig())
+            self.connected = True
             return True
+        
         else:
             print('WiFi connection failed')
             return False
@@ -100,6 +87,8 @@ class MQTTManager:
             if self.connected and self.client:
                 return True
             return False
-        except:
-            return False
+        
+        except Exception as e:
+            return f"Exception occurred: {e}"
+
 
