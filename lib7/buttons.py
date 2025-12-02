@@ -38,3 +38,10 @@ class Return:
 
 # sw_0 = Pin(9, mode = Pin.IN, pull = Pin.PULL_UP)
 
+class Led:
+    def __init__(self):
+        self.led = Pin("LED")
+
+    def blink(self):
+        self.led.on()
+        self.led.off()

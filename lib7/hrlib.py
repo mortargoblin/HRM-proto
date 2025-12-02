@@ -5,6 +5,9 @@ from piotimer import Piotimer
 from fifo import Fifo
 from filefifo import Filefifo
 import framebuf, time, math
+from lib7 import hrv
+from lib7 import menu_icons
+from lib7 import buttons
 
 class Screen:
     width: int = 128
@@ -14,6 +17,7 @@ class Screen:
 
 i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
 oled = SSD1306_I2C(Screen.width, Screen.height, i2c)
+led = buttons.Led()
 #timer = Timer(period=10, mode = Timer.PERIODIC, callback = lambda t: print(1))
 
 def get_hr():
@@ -96,7 +100,8 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
     timer.count = 0
     detecting = False
     current_max = 1
-    threshold = 65536 / 2 + 1600
+    threshold = 32000
+    current_max_interval = threshold
     ppi_list = []
     mean_bpm_list = []
     bpm = 0
@@ -133,25 +138,28 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
             ### PPI Measuring ###
             if hr_datapoint > threshold:
                 detecting = True
-                # if hr_datapoint > current_max:
-                #    current_max = hr_datapoint
+                if hr_datapoint > current_max:
+                    current_max = hr_datapoint
+                    current_max_interval = timer.count
 
-            else:
-                if detecting:
-                    detecting = False
-                    if timer.count > 1500:
-                        timer.count = 0
-                    if timer.count > 250:
-                        ppi_list.append(timer.count)
-                        timer.count = 0
-                        if len(ppi_list) > 5:
-                            ppi_list.pop(0)
-                            bpm = calculate_bpm(ppi_list)
-                            mean_bpm_list.append(bpm)
+            elif hr_datapoint < threshold and detecting:
+                detecting = False
 
-                            if len(mean_bpm_list) > 50:
-                                mean_bpm_list.pop(0)
-                        print("bpm:", bpm)
+                ppi_list.append(current_max_interval)
+                current_max = threshold
+                print(ppi_list)
+                
+                timer.count = 0
+                led.blink()
+
+                if len(ppi_list) > 5:
+                    ppi_list.pop(0)
+                    bpm = calculate_bpm(ppi_list)
+                    mean_bpm_list.append(bpm)
+
+                    if len(mean_bpm_list) > 50:
+                        mean_bpm_list.pop(0)
+                print("bpm:", bpm)
 
             if ReturnBtn.pressed:
                 break
