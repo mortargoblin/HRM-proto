@@ -1,5 +1,5 @@
 from umqtt.simple import MQTTClient
-import ubinascii, machine, time, network
+import ubinascii, machine, network, ntptime
 
 class MQTTManager:
     def __init__(self):
@@ -70,14 +70,16 @@ class MQTTManager:
         
         if not wlan.isconnected():
             wlan.connect(WIFI_SSID, WIFI_PASS)
-
+            ntptime.host = "pool.ntp.org"
+            ntptime.settime()
         
         if wlan.isconnected():
             print('Wi-Fi connected!')
             print('Network config:', wlan.ifconfig())
+            
             self.connected = True
             return True
-        
+
         else:
             print('WiFi connection failed')
             return False

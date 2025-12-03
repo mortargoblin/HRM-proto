@@ -184,7 +184,7 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                 sd = hrv.sdnn(ppi_list)
                 rm = hrv.rmssd(mean_bpm_list)
                 
-                time_str = f"{now_time[0] % 100}/{now_time[1]:02d}/{now_time[2]:02d} {now_time[3]:02d}:{now_time[4]:02d}"
+                time_str = f"{now_time[0] % 100}/{now_time[1]:02d}/{now_time[2]:02d} {2 + now_time[3]:02d}:{now_time[4]:02d}"
                     
                 data = [
                     f"{time_str}",

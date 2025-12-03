@@ -27,7 +27,8 @@ def main():
     if wifi_connected:
         mqtt_connected = Mqtt.connect_mqtt()
         if mqtt_connected:
-            print("MQTT: OK\nWIFI: OK")  
+            print("MQTT: OK\nWIFI: OK")
+            
         else:
             print("MQTT: FAIL\nWIFI: OK")  
     else:
