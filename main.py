@@ -59,11 +59,11 @@ def main():
 def launch(option: int):
     if option == MenuState.HR_DISPLAY:
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hr", Mqtt=Mqtt)
-        ReturnBtn.pressed = False
+        
 
     elif option == MenuState.HRV:
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hrv", Mqtt=Mqtt)
-        ReturnBtn.pressed = False
+        
 
     elif option == MenuState.KUBIOS:
         k_status = Kubios.enable()
@@ -82,9 +82,9 @@ def launch(option: int):
             hrlib.oled.show()
             time.sleep(1)
             
-        ReturnBtn.pressed = False
+        
     elif option == MenuState.HISTORY:
         history.get_Med_History(ReturnBtn=ReturnBtn, Encoder=Encoder)
-        ReturnBtn.pressed = False
+        
 if __name__=="__main__":
     main()
