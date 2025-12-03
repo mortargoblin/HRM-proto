@@ -179,7 +179,7 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                 time_str = f"{now_time[2]:02d}/{now_time[1]:02d}"
                     
                 data = [
-                    f"T: {time_str}" 
+                    f"T: {time_str}",
                     f"AVG_BPM: {mean_bpm}", 
                     f"AVG_PPI: {mean_ppi}", 
                     f"RMSSD: {rm}", 
@@ -188,7 +188,7 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
 
                 if Mqtt.connected: #Data published to MQTT every 30 seconds
                     Mqtt.publish(f"{Mqtt.TOPIC_HRV}", f"{data}")
-                history.store_Data(data)
+                history.store_Data(datalist=data)
 
             # draw stats 
             if mode == "hrv":
