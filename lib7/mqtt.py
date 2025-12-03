@@ -30,7 +30,6 @@ class MQTTManager:
                                        port=self.MQTT_PORT)
             
             self.client.connect()
-            self.connected = True
             self.publish(self.TOPIC_STATUS, b"online")
             return True
             
@@ -70,13 +69,12 @@ class MQTTManager:
         
         if not wlan.isconnected():
             wlan.connect(WIFI_SSID, WIFI_PASS)
-            ntptime.host = "pool.ntp.org"
-            ntptime.settime()
+            #ntptime.host = "pool.ntp.org"
+            #ntptime.settime()
         
         if wlan.isconnected():
             print('Wi-Fi connected!')
             print('Network config:', wlan.ifconfig())
-            
             self.connected = True
             return True
 

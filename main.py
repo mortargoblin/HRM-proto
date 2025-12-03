@@ -58,17 +58,30 @@ def main():
             ReturnBtn.pressed = False
 
 def launch(option: int):
+    k_status = Kubios.enable()
+    
     if option == MenuState.HR_DISPLAY:
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hr", Mqtt=Mqtt)
         
 
-    elif option == MenuState.HRV:
+    elif option == MenuState.HRV:        
+        
+        """if Mqtt.connected:
+        hrlib.oled.fill(0)
+        hrlib.oled.text(f'{k_status}', 15, 30, 1)
+        hrlib.oled.show()
+        time.sleep(1)"""
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hrv", Mqtt=Mqtt)
+        
+        """else:
+            hrlib.oled.fill(0)
+            hrlib.oled.text(f'{k_status}', 15, 30, 1)
+            hrlib.oled.show()
+            time.sleep(1)"""
+
         
 
     elif option == MenuState.KUBIOS:
-        k_status = Kubios.enable()
-        
         if Kubios.enabled:
             hrlib.oled.fill(0)
             hrlib.oled.text(f'{k_status}', 15, 30, 1)
