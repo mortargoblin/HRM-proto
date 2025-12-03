@@ -4,7 +4,7 @@ from ssd1306 import SSD1306_I2C
 from piotimer import Piotimer
 from fifo import Fifo
 from filefifo import Filefifo
-import framebuf, time, math
+import framebuf, time, math, utime
 from lib7 import hrv
 from lib7 import menu_icons
 from lib7 import buttons
@@ -59,6 +59,11 @@ def menu(state: int):
 def calculate_bpm(ppi_list: list[int]):
     if len(ppi_list) < 5:
         raise RuntimeError("List too short")
+    if sum(ppi_list) == 0:
+        raise RuntimeError(
+            "Sum of ppi_list zero. " +
+            "prevent division by zero"
+            )
 
     return int(60000 / (sum(ppi_list[-5:]) / 5))
 
@@ -96,7 +101,7 @@ def draw_stats(x: int, y:int, stats):
         offset += len(key) * font_width + 30
 
 def hr_monitor(ReturnBtn, mode: str, Mqtt):
-    timer = Piotimer(freq=1000, callback=lambda t: setattr(t, "count", t.count+1))
+    timer = Piotimer(freq=1000, callback=lambda t: setattr(timer, "count", timer.count+1))
     timer.count = 0
     detecting = False
     current_max = 1
@@ -148,13 +153,16 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                 ppi_list.append(current_max_interval)
                 current_max = threshold
                 print(ppi_list)
-                
+                print("Timer: ", timer.count)
                 timer.count = 0
                 led.blink()
 
                 if len(ppi_list) > 5:
                     ppi_list.pop(0)
-                    bpm = calculate_bpm(ppi_list)
+                    if sum(ppi_list) != 0:
+                        bpm = calculate_bpm(ppi_list)
+                    else:
+                        print("SUM OF PPI_LIST ZERO")
                     mean_bpm_list.append(bpm)
 
                     if len(mean_bpm_list) > 50:
@@ -167,19 +175,19 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
             #Final report for hrv mode, values updated every 30 seconds.
             # report for hrv mode
             if time.time() - start_time >= 30 and mode == "hrv":
+                now_time = utime.localtime(start_time)
                 start_time = time.time()
 
                 #MEAN PPI, MEAN HR, RMSSD, SDNN
-                mean_ppi = sum(ppi_list) / len(ppi_list)
-                mean_bpm = sum(mean_bpm_list) / len(mean_bpm_list)
+                mean_ppi = int(sum(ppi_list) / len(ppi_list))
+                mean_bpm = int(sum(mean_bpm_list) / len(mean_bpm_list))
                 sd = hrv.sdnn(ppi_list)
                 rm = hrv.rmssd(mean_bpm_list)
                 
-                now_time = time.localtime()
-                time_str = f"{now_time[2]:02d}/{now_time[1]:02d}"
+                time_str = f"{now_time[0] % 100}/{now_time[1]:02d}/{now_time[2]:02d} {now_time[3]:02d}:{now_time[4]:02d}"
                     
                 data = [
-                    f"T: {time_str}",
+                    f"{time_str}",
                     f"AVG_BPM: {mean_bpm}", 
                     f"AVG_PPI: {mean_ppi}", 
                     f"RMSSD: {rm}", 
