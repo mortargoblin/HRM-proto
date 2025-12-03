@@ -29,7 +29,7 @@ def update_Display(records: dict, counter: int):
     values = records[f"Patient[{counter}]"]
     
     for i in range(len(values)):
-        time.sleep(0.25)
+        time.sleep(0.05)
         value = values[i].strip("'")
         oled.text(value, 14, 20 +(8*i))
         oled.show()
