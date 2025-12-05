@@ -75,6 +75,7 @@ def get_Med_History(ReturnBtn: object, Encoder):
 #Storing data into the patient_records.txt file.
 def store_Data(datalist):
     updated_records = []
+    updated_records.append(datalist)
 
     with open('patient_records.txt', 'r+') as file:
         linecount: int = len(file.readlines())
@@ -85,8 +86,7 @@ def store_Data(datalist):
                 line = line.strip()
                 updated_records.append(line)
             if linecount >= 5:    
-                updated_records.pop(0)
-        updated_records.append(datalist)
+                updated_records.pop()
         
     try:
         with open('patient_records.txt', 'w') as file:

@@ -8,7 +8,7 @@ class Encoder:
     def __init__(self, rot_a, rot_b, rot_btn=None):
         self.a = Pin(rot_a, mode=Pin.IN, pull=Pin.PULL_UP)
         self.b = Pin(rot_b, mode=Pin.IN, pull=Pin.PULL_UP)
-        self.fifo = Fifo(30, typecode='i')
+        self.fifo = Fifo(50, typecode='i')
         self.a.irq(handler=self.handler, trigger=Pin.IRQ_RISING, hard=True)
 
         if rot_btn is not None:
