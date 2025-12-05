@@ -173,13 +173,13 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                 break
 
             #Final report for hrv mode, values updated every 30 seconds.
-            # report for hrv mode
             if time.time() - start_time >= 30 and mode == "hrv":
                 now_time = utime.localtime(start_time)
                 start_time = time.time()
 
                 #NTP, MEAN PPI, MEAN HR, RMSSD, SDNN
                 time_str = f"{now_time[0] % 100}/{now_time[1]:02d}/{now_time[2]:02d} {2 + now_time[3]:02d}:{now_time[4]:02d}"
+                print(f"NTP: {time_str}")
                 hrv_res = hrv_cl.calc_hrv(mean_bpm_list, ppi_list)
                     
                 data = [f"{time_str}", f"AVG_BPM: {hrv_res[0]}", f"AVG_PPI: {hrv_res[1]}", f"RMSSD: {hrv_res[2]}", f"SDNN: {hrv_res[3]}"]
