@@ -11,8 +11,7 @@ class Screen:
 i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
 oled = SSD1306_I2C(Screen.width, Screen.height, i2c)
 
-#Displays patient_records.txt data on the screen
-def update_Display(records: dict, counter: int):
+def update_Display(records: dict, counter: int): #Displays patient_records.txt data on the screen
     oled.fill(0)   
     oled.text("[History]", 0, 0,  1)
     oled.text(f"[P-{counter}]", 90, 0, 1)
@@ -58,7 +57,6 @@ def get_Med_History(ReturnBtn: object, Encoder): #Function to convert data from 
     update_Display(records, 1)
 
     while not ReturnBtn.pressed:
-
         if Encoder.fifo.has_data():
             rotator = Encoder.fifo.get()
 
