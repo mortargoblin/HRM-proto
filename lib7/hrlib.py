@@ -17,6 +17,7 @@ class Screen:
 
 i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
 oled = SSD1306_I2C(Screen.width, Screen.height, i2c)
+hrv_cl = hrv.HRV()
 led = buttons.Led()
 #timer = Timer(period=10, mode = Timer.PERIODIC, callback = lambda t: print(1))
 
@@ -68,7 +69,6 @@ def calculate_bpm(ppi_list: list[int]):
     return int(60000 / (sum(ppi_list[-5:]) / 5))
 
 def draw_stats(x: int, y:int, stats):
-
     font_width = 8
     width = 0
     height = 10
@@ -178,21 +178,11 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                 now_time = utime.localtime(start_time)
                 start_time = time.time()
 
-                #MEAN PPI, MEAN HR, RMSSD, SDNN
-                mean_ppi = int(sum(ppi_list) / len(ppi_list))
-                mean_bpm = int(sum(mean_bpm_list) / len(mean_bpm_list))
-                sd = hrv.sdnn(ppi_list)
-                rm = hrv.rmssd(mean_bpm_list)
-                
+                #NTP, MEAN PPI, MEAN HR, RMSSD, SDNN
                 time_str = f"{now_time[0] % 100}/{now_time[1]:02d}/{now_time[2]:02d} {2 + now_time[3]:02d}:{now_time[4]:02d}"
+                hrv_res = hrv_cl.calc_hrv(mean_bpm_list, ppi_list)
                     
-                data = [
-                    f"{time_str}",
-                    f"AVG_BPM: {mean_bpm}", 
-                    f"AVG_PPI: {mean_ppi}", 
-                    f"RMSSD: {rm}", 
-                    f"SDNN: {sd}"
-                ]
+                data = [f"{time_str}", f"AVG_BPM: {hrv_res[0]}", f"AVG_PPI: {hrv_res[1]}", f"RMSSD: {hrv_res[2]}", f"SDNN: {hrv_res[3]}"]
 
                 if Mqtt.connected: #Data published to MQTT every 30 seconds
                     Mqtt.publish(f"{Mqtt.TOPIC_HRV}", f"{data}")

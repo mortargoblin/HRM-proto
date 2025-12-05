@@ -13,9 +13,12 @@ class MenuState:
 
 Encoder = buttons.Encoder(10, 11, 12)
 
-#Button provides user with an almost instant way of getting out of a mode:
+#Button for exiting a mode in an instant:
 ReturnBtn = buttons.Utility(9, Pin.IN, Pin.PULL_UP)
+
+#Class for handling MQTT + Wi-Fi functionality
 Mqtt = mqtt.MQTTManager()
+
 Kubios = kubios.KubiosAnalytics()
 
 NUM_OPTIONS = 4
