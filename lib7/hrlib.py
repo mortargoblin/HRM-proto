@@ -1,9 +1,8 @@
 from lib7 import mqtt, menu_icons, hrv, history
 from machine import Pin, I2C, ADC 
 from ssd1306 import SSD1306_I2C
-from piotimer import Piotimer
-from fifo import Fifo
-from filefifo import Filefifo
+from lib7.fifo import Fifo
+from lib7.filefifo import Filefifo
 import framebuf, time, math, utime
 from lib7 import hrv
 from lib7 import menu_icons
@@ -101,12 +100,9 @@ def draw_stats(x: int, y:int, stats):
         offset += len(key) * font_width + 30
 
 def hr_monitor(ReturnBtn, mode: str, Mqtt):
-    timer = Piotimer(freq=1000, callback=lambda t: setattr(timer, "count", timer.count+1))
-    timer.count = 0
     detecting = False
     current_max = 1
     threshold = 32000
-    current_max_interval = threshold
     ppi_list = []
     mean_bpm_list = []
     bpm = 0
@@ -117,6 +113,7 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
     start_time = time.time()
 
     old_y = Screen.height // 2
+    last_peak_time = utime.ticks_ms()
 
     while not ReturnBtn.pressed:
         oled.fill(0)
@@ -137,7 +134,6 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
             else:
                 oled.pixel(x, y, Screen.color)
 
-
             old_y = y
 
             ### PPI Measuring ###
@@ -145,16 +141,18 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                 detecting = True
                 if hr_datapoint > current_max:
                     current_max = hr_datapoint
-                    current_max_interval = timer.count
 
             elif hr_datapoint < threshold and detecting:
                 detecting = False
 
-                ppi_list.append(current_max_interval)
+                now_ms = utime.ticks_ms()
+                interval = utime.ticks_diff(now_ms, last_peak_time)
+                last_peak_time = now_ms
+
+                ppi_list.append(interval)
                 current_max = threshold
                 print(ppi_list)
-                print("Timer: ", timer.count)
-                timer.count = 0
+                print("Interval (ms): ", interval)
                 led.blink()
 
                 if len(ppi_list) > 5:
@@ -178,12 +176,11 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                 now_time = utime.localtime(start_time)
                 start_time = time.time()
 
-                #MEAN PPI, MEAN HR, RMSSD, SDNN
-                mean_ppi = int(sum(ppi_list) / len(ppi_list))
-                mean_bpm = int(sum(mean_bpm_list) / len(mean_bpm_list))
-                sd = hrv.sdnn(ppi_list)
-                rm = hrv.rmssd(mean_bpm_list)
-                
+                mean_ppi = int(sum(ppi_list) / len(ppi_list)) if ppi_list else 0
+                mean_bpm = int(sum(mean_bpm_list) / len(mean_bpm_list)) if mean_bpm_list else 0
+                sd = hrv.sdnn(ppi_list) if ppi_list else 0
+                rm = hrv.rmssd(mean_bpm_list) if mean_bpm_list else 0
+
                 time_str = f"{now_time[0] % 100}/{now_time[1]:02d}/{now_time[2]:02d} {2 + now_time[3]:02d}:{now_time[4]:02d}"
                     
                 data = [
@@ -201,8 +198,7 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
             # draw stats 
             if mode == "hrv":
                 # More stuff
-                draw_stats(0, 50, {"BPM": bpm, "AVG_PPI": int(mean_ppi)})
-
+                draw_stats(0, 50, {"BPM": bpm, "AVG_PPI": int(mean_ppi) if mean_ppi else 0})
             else:
                 # BPM only
                 draw_stats(0, 50, {"BPM": bpm})

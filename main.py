@@ -1,6 +1,6 @@
 from machine import Pin
 from lib7 import buttons, hrlib, kubios, mqtt, history
-import micropython, framebuf
+import micropython
 import time
 
 micropython.alloc_emergency_exception_buf(200)
@@ -23,17 +23,10 @@ def main():
 
     # Testing for Wi-Fi connection:
     wifi_connected = Mqtt.connect_wifi()
-        
     if wifi_connected:
-        mqtt_connected = Mqtt.connect_mqtt()
-        if mqtt_connected:
-            print("MQTT: OK\nWIFI: OK")
-            
-        else:
-            print("MQTT: FAIL\nWIFI: OK")  
+        print("WIFI: OK")
     else:
-        print("Cannot connect to a Wi-Fi.")
-
+        print("Cannot connect to Wi-Fi.")
 
     ### MAIN LOOP ###
     while True:
@@ -47,7 +40,6 @@ def main():
             elif fifo_value == -1:
                 current_state = (current_state - 1) % NUM_OPTIONS
 
-        
         # rotary encoder button handling
         if Encoder.pressed:
             launch(current_state)
@@ -58,45 +50,22 @@ def main():
             ReturnBtn.pressed = False
 
 def launch(option: int):
-    k_status = Kubios.enable()
-    
     if option == MenuState.HR_DISPLAY:
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hr", Mqtt=Mqtt)
-        
 
-    elif option == MenuState.HRV:        
-        
-        """if Mqtt.connected:
-        hrlib.oled.fill(0)
-        hrlib.oled.text(f'{k_status}', 15, 30, 1)
-        hrlib.oled.show()
-        time.sleep(1)"""
+    elif option == MenuState.HRV:
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hrv", Mqtt=Mqtt)
-        
-        """else:
-            hrlib.oled.fill(0)
-            hrlib.oled.text(f'{k_status}', 15, 30, 1)
-            hrlib.oled.show()
-            time.sleep(1)"""
-
-        
 
     elif option == MenuState.KUBIOS:
+        k_status = Kubios.enable()
         if Kubios.enabled:
-            hrlib.oled.fill(0)
-            hrlib.oled.text(f'{k_status}', 15, 30, 1)
-            hrlib.oled.show()
-            time.sleep(1)
-            #TÄHÄN FUNKTIOKUTSU
-            Kubios.disable()
-        
+            Kubios.select_and_send(ReturnBtn=ReturnBtn, Encoder=Encoder)
         else:
             hrlib.oled.fill(0)
-            hrlib.oled.text(f'{k_status}', 15, 30, 1)
+            hrlib.oled.text(f"{k_status}", 15, 30, 1)
             hrlib.oled.show()
             time.sleep(1)
-            
-        
+
     elif option == MenuState.HISTORY:
         history.get_Med_History(ReturnBtn=ReturnBtn, Encoder=Encoder)
         

@@ -6,9 +6,9 @@ class MQTTManager:
         self.client = None
         self.connected = False
         
-        #mqtt Config
-        self.MQTT_BROKER = '192.168.7.253'
-        self.MQTT_PORT = 21883
+        # mqtt Config
+        self.MQTT_BROKER = 'groupseven.asuscomm.com'
+        self.MQTT_PORT = 21883 
         self.MQTT_USER = 'Rizvan'
         self.MQTT_PASS = 'Group_6Group_7'
         self.CLIENT_ID = b'hr_monitor_' + ubinascii.hexlify(machine.unique_id())
@@ -29,8 +29,12 @@ class MQTTManager:
                 self.client = MQTTClient(self.CLIENT_ID, self.MQTT_BROKER, 
                                        port=self.MQTT_PORT)
             
+            print("Connecting to MQTT:", self.MQTT_BROKER, self.MQTT_PORT)
             self.client.connect()
-            self.publish(self.TOPIC_STATUS, b"online")
+            self.connected = True
+
+            self.client.publish(self.TOPIC_STATUS, b"online")
+            print("MQTT connected.")
             return True
             
         except Exception as e:
@@ -39,12 +43,16 @@ class MQTTManager:
             return False
     
     def publish(self, topic, message):
+        # ensure connection
         if not self.connected or not self.client:
-            self.connect_mqtt()
+            if not self.connect_mqtt():
+                print("MQTT reconnect failed, can't publish.")
+                return False
             
         try:
             self.client.publish(topic, message)
             print("Publish successful.")
+            return True
             
         except Exception as e:
             print("MQTT Publish failed:", e)
@@ -54,7 +62,7 @@ class MQTTManager:
     def disconnect(self):
         if self.client and self.connected:
             try:
-                self.publish(self.TOPIC_STATUS, b"offline")
+                self.client.publish(self.TOPIC_STATUS, b"offline")
                 self.client.disconnect()
             except:
                 pass
@@ -75,7 +83,6 @@ class MQTTManager:
         if wlan.isconnected():
             print('Wi-Fi connected!')
             print('Network config:', wlan.ifconfig())
-            self.connected = True
             return True
 
         else:
@@ -90,5 +97,3 @@ class MQTTManager:
         
         except Exception as e:
             return f"Exception occurred: {e}"
-
-

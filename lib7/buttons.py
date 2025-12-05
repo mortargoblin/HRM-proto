@@ -4,29 +4,31 @@ import utime
 
 class Encoder:
     pressed: bool = False
+
     def __init__(self, rot_a, rot_b, rot_btn=None):
         self.a = Pin(rot_a, mode=Pin.IN, pull=Pin.PULL_UP)
         self.b = Pin(rot_b, mode=Pin.IN, pull=Pin.PULL_UP)
         self.fifo = Fifo(30, typecode='i')
         self.a.irq(handler=self.handler, trigger=Pin.IRQ_RISING, hard=True)
 
-        if rot_btn != None:
+        if rot_btn is not None:
             self.btn = Pin(rot_btn, mode=Pin.IN, pull=Pin.PULL_UP)
             self.btn.irq(handler=self.button_handler, trigger=Pin.IRQ_FALLING)
 
     def handler(self, pin):
-        if self.b():
+        if self.b.value():
             self.fifo.put(-1)
         else:
             self.fifo.put(1)
+
 
     def button_handler(self, pin):
         utime.sleep_ms(20)
         if not pin.value():
             self.pressed = True
 
+
 class Return:
-    #return button, used for returning
     pressed: bool = False
 
     def __init__(self, pin, mode, pull):
@@ -36,7 +38,6 @@ class Return:
     def handler(self, pin):
         self.pressed = True
 
-# sw_0 = Pin(9, mode = Pin.IN, pull = Pin.PULL_UP)
 
 class Led:
     def __init__(self):
