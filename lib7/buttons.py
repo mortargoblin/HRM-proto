@@ -28,7 +28,7 @@ class Encoder:
             self.pressed = True
 
 
-class Return:
+class Utility:
     pressed: bool = False
 
     def __init__(self, pin, mode, pull):

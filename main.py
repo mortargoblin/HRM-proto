@@ -12,7 +12,13 @@ class MenuState:
     HISTORY: int = 3
 
 Encoder = buttons.Encoder(10, 11, 12)
-ReturnBtn = buttons.Return(9, Pin.IN, Pin.PULL_UP)
+
+#Button provides user with an almost instant way of getting out of a mode:
+ReturnBtn = buttons.Utility(9, Pin.IN, Pin.PULL_UP)
+
+#Button made for instant connection effort to Wi-Fi:
+WifiBtn = buttons.Utility(7, Pin.IN, Pin.PULL_UP)
+
 Mqtt = mqtt.MQTTManager()
 Kubios = kubios.KubiosAnalytics()
 
@@ -47,13 +53,7 @@ def launch(option: int):
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hr", Mqtt=Mqtt)
 
     elif option == MenuState.HRV:
-        #if Mqtt.connect_wifi():
-        hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hrv", Mqtt=Mqtt)
-        """else:
-            hrlib.oled.fill(0)
-            hrlib.oled.text("[Wi-Fi Error]", 15, 30, 1)
-            hrlib.oled.show()
-            time.sleep(1)"""    
+        hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hrv", Mqtt=Mqtt)  
     
     elif option == MenuState.KUBIOS:
         k_status = Kubios.enable()
