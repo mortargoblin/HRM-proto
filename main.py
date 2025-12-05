@@ -15,10 +15,6 @@ Encoder = buttons.Encoder(10, 11, 12)
 
 #Button provides user with an almost instant way of getting out of a mode:
 ReturnBtn = buttons.Utility(9, Pin.IN, Pin.PULL_UP)
-
-#Button made for instant connection effort to Wi-Fi:
-WifiBtn = buttons.Utility(7, Pin.IN, Pin.PULL_UP)
-
 Mqtt = mqtt.MQTTManager()
 Kubios = kubios.KubiosAnalytics()
 
