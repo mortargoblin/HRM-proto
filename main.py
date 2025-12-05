@@ -21,13 +21,6 @@ NUM_OPTIONS = 4
 def main():
     current_state = MenuState.HR_DISPLAY
 
-    # Testing for Wi-Fi connection:
-    wifi_connected = Mqtt.connect_wifi()
-    if wifi_connected:
-        print("WIFI: OK")
-    else:
-        print("Cannot connect to Wi-Fi.")
-
     ### MAIN LOOP ###
     while True:
         hrlib.menu(current_state)
@@ -54,10 +47,17 @@ def launch(option: int):
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hr", Mqtt=Mqtt)
 
     elif option == MenuState.HRV:
+        #if Mqtt.connect_wifi():
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hrv", Mqtt=Mqtt)
-
+        """else:
+            hrlib.oled.fill(0)
+            hrlib.oled.text("[Wi-Fi Error]", 15, 30, 1)
+            hrlib.oled.show()
+            time.sleep(1)"""    
+    
     elif option == MenuState.KUBIOS:
         k_status = Kubios.enable()
+    
         if Kubios.enabled:
             Kubios.select_and_send(ReturnBtn=ReturnBtn, Encoder=Encoder)
         else:
