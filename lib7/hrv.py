@@ -1,6 +1,6 @@
 import math
 
-def rmssd(ppi):
+def rmssd(ppi): # RMSSD, or Root Mean Square of Successive Differences, is a key Heart Rate Variability (HRV) metric. 
     if len(ppi) < 2:
         return 0
 
@@ -13,7 +13,7 @@ def rmssd(ppi):
     return round(math.sqrt(mean_sq))
 
 
-def sdnn(ppi):
+def sdnn(ppi): # SDNN (Standard Deviation of NN Intervals) is a key Heart Rate Variability (HRV) metric, measuring the total variation in time between normal heartbeats (NN intervals) over a period of time.
     if len(ppi) < 2:
         return 0
 
