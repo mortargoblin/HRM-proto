@@ -112,6 +112,8 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
     bpm = 0
     mean_bpm = 0
     mean_ppi = 0
+    rm = 0
+    sd = 0
 
     hr_buffer = Fifo(size=5)
     start_time = time.time()
@@ -141,19 +143,20 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
             old_y = y
 
             ### PPI Measuring ###
+            print(timer.count)
             if hr_datapoint > threshold:
                 detecting = True
                 if hr_datapoint > current_max:
                     current_max = hr_datapoint
                     current_max_interval = timer.count
 
-            elif hr_datapoint < threshold and detecting:
+            elif detecting and timer.count > 300:
                 detecting = False
 
                 ppi_list.append(current_max_interval)
                 current_max = threshold
-                print(ppi_list)
-                print("Timer: ", timer.count)
+                # print(ppi_list)
+                # print("Timer: ", timer.count)
                 timer.count = 0
                 led.blink()
 
@@ -191,7 +194,8 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
             # draw stats 
             if mode == "hrv":
                 # More stuff
-                draw_stats(0, 50, {"BPM": bpm, "AVG_PPI": int(mean_ppi)})
+                draw_stats(0, 0, {"BPM": bpm, "AVG_BPM": int(mean_bpm)})
+                draw_stats(0, 54, {"RMSSD": rm, "SDNN": int(sd)})
 
             else:
                 # BPM only
