@@ -1,7 +1,8 @@
 from lib7.mqtt import MQTTManager
-from lib7 import history
+from lib7 import history, menu_icons
 import json
 import time
+import framebuf
 
 class KubiosAnalytics:
     
@@ -98,20 +99,52 @@ class KubiosAnalytics:
             print("No patient records found.")
             return
 
+        def draw_kubios_select(counter):
+            oled = history.oled
+            icons = menu_icons.Kubios_Icons()
+            person_icon = icons[0]
+            icon_fb = framebuf.FrameBuffer(person_icon, 12, 12, framebuf.MONO_HLSB)
+
+            oled.fill(0)
+            oled.text("[Kubios]", 0, 0, 1)
+            oled.text("Select patient", 0, 10, 1)
+
+            start_y = 24
+            step_y = 10
+            max_index = len(records)
+
+            for i in range(1, max_index + 1):
+                y = start_y + (i - 1) * step_y
+
+                #icon
+                oled.blit(icon_fb, 0, y - 2)
+
+                label = f"P-{i}"
+
+                #arrow
+                if i == counter:
+                    oled.text(">", 14, y)
+                else:
+                    oled.text(" ", 14, y)
+
+                oled.text(label, 24, y)
+
+            oled.show()
+
         counter = 1
-        history.update_Display(records, counter)
+        max_index = len(records)
+        draw_kubios_select(counter)
 
         while not ReturnBtn.pressed:
             #rotary movement
             if Encoder.fifo.has_data():
                 rotator = Encoder.fifo.get()
-                max_index = len(records)
                 if rotator == 1 and counter < max_index:
                     counter += 1
-                    history.update_Display(records, counter)
+                    draw_kubios_select(counter)
                 elif rotator == -1 and counter > 1:
                     counter -= 1
-                    history.update_Display(records, counter)
+                    draw_kubios_select(counter)
 
             #press to send this patient to Kubios
             if Encoder.pressed:
@@ -131,8 +164,30 @@ class KubiosAnalytics:
                     Encoder.pressed = False
                     continue
 
+                oled = history.oled
+
+                # show loading
+                oled.fill(0)
+                oled.text("[Kubios]", 0, 0, 1)
+                oled.text(f"Sending P-{counter}", 0, 20, 1)
+                oled.text(date_str, 0, 30, 1)
+                oled.show()
+
                 print("Sending to Kubios:", date_str, mean_bpm, mean_ppi, rmssd, sdnn)
-                self.send_hrv_data(mean_ppi, mean_bpm, sdnn, rmssd)
+                success = self.send_hrv_data(mean_ppi, mean_bpm, sdnn, rmssd)
+
+                #show result
+                oled.fill(0)
+                oled.text("[Kubios]", 0, 0, 1)
+                if success:
+                    oled.text("Done", 0, 20, 1)
+                else:
+                    oled.text("Error sending", 0, 20, 1)
+                oled.show()
+                time.sleep(1)
+
+                #back to selection
                 Encoder.pressed = False
+                draw_kubios_select(counter)
 
         ReturnBtn.pressed = False
