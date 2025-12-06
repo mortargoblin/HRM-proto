@@ -105,7 +105,7 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
     timer.count = 0
     detecting = False
     current_max = 1
-    threshold = 32000
+    threshold = 35000
     current_max_interval = threshold
     ppi_list = []
     mean_bpm_list = []
@@ -138,7 +138,6 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                     oled.pixel(x, old_y-i, Screen.color)
             else:
                 oled.pixel(x, y, Screen.color)
-
 
             old_y = y
 
@@ -194,7 +193,7 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
             # draw stats 
             if mode == "hrv":
                 # More stuff
-                draw_stats(0, 0, {"BPM": bpm, "AVG_BPM": int(mean_bpm)})
+                draw_stats(0, 0, {"BPM": bpm, "avgBPM": int(mean_bpm)})
                 draw_stats(0, 54, {"RMSSD": rm, "SDNN": int(sd)})
 
             else:
