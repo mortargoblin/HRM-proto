@@ -61,10 +61,7 @@ def calculate_bpm(ppi_list: list[int]):
     if len(ppi_list) < 5:
         raise RuntimeError("List too short")
     if sum(ppi_list) == 0:
-        raise RuntimeError(
-            "Sum of ppi_list zero. " +
-            "prevent division by zero"
-            )
+        raise RuntimeError("Sum of ppi_list zero.")
 
     return int(60000 / (sum(ppi_list[-5:]) / 5))
 
@@ -104,8 +101,8 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
     timer = Piotimer(freq=1000, callback=lambda t: setattr(timer, "count", timer.count+1))
     timer.count = 0
     detecting = False
-    current_max = 1
     threshold = 35000
+    current_max = 1
     current_max_interval = threshold
     ppi_list = []
     mean_bpm_list = []
@@ -124,6 +121,10 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
         oled.fill(0)
 
         for x in range(Screen.width):
+
+            if ReturnBtn.pressed:
+                break
+
             hr_buffer.put(get_hr())
             hr_datapoint = hr_buffer.get()
             # print(hr_datapoint)
@@ -142,14 +143,15 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
             old_y = y
 
             ### PPI Measuring ###
-            print(timer.count)
-            if hr_datapoint > threshold:
+            print("THRESHOLD:", threshold)
+            print(hr_datapoint)
+            if hr_datapoint >= threshold:
                 detecting = True
                 if hr_datapoint > current_max:
                     current_max = hr_datapoint
                     current_max_interval = timer.count
 
-            elif detecting and timer.count > 300:
+            if hr_datapoint < threshold and detecting and timer.count > 300:
                 detecting = False
 
                 ppi_list.append(current_max_interval)
@@ -170,9 +172,6 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                     if len(mean_bpm_list) > 50:
                         mean_bpm_list.pop(0)
                 print("bpm:", bpm)
-
-            if ReturnBtn.pressed:
-                break
 
             #Final report for hrv mode, values updated every 30 seconds.
             if time.time() - start_time >= 30 and mode == "hrv":
