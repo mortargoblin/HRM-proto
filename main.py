@@ -24,6 +24,7 @@ Kubios = kubios.KubiosAnalytics()
 NUM_OPTIONS = 4
 
 def main():
+    Encoder.on = True
     current_state = MenuState.HR_DISPLAY
 
     ### MAIN LOOP ###
@@ -40,16 +41,16 @@ def main():
 
         # rotary encoder button handling
         if Encoder.pressed:
-            launch(current_state)
             Encoder.pressed = False
             ReturnBtn.pressed = False
+            launch(current_state)
 
         if ReturnBtn.pressed:
             ReturnBtn.pressed = False
 
 def launch(option: int):
     if option == MenuState.HR_DISPLAY:
-        hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hr", Mqtt=Mqtt)
+        hrlib.hr_monitor(ReturnBtn=ReturnBtn, Encoder=Encoder, mode="hr", Mqtt=Mqtt)
 
     elif option == MenuState.HRV:
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, mode="hrv", Mqtt=Mqtt)  

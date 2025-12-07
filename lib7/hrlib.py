@@ -97,12 +97,12 @@ def draw_stats(x: int, y:int, stats):
                 )
         offset += len(key) * font_width + 30
 
-def hr_monitor(ReturnBtn, mode: str, Mqtt):
+def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
     timer = Piotimer(freq=1000, callback=lambda t: setattr(timer, "count", timer.count+1))
     timer.count = 0
     detecting = False
-    threshold = 35000
     current_max = 1
+    threshold = 35000
     current_max_interval = threshold
     ppi_list = []
     mean_bpm_list = []
@@ -114,6 +114,29 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
 
     hr_buffer = Fifo(size=5)
     start_time = time.time()
+
+    finger = False
+    while not Encoder.pressed:
+        oled.fill(0)
+        if not Encoder.fifo.empty():
+            fifo_value = Encoder.fifo.get()
+            if fifo_value == 1:
+                finger = True
+            elif fifo_value == -1:
+                finger = False
+
+        oled.text("Artery", 10, 28)
+        oled.text("Finger", 70, 28)
+
+        if finger == False:
+            oled.text("^", 30, 40)
+        elif finger == True:
+            oled.text("^", 90, 40)
+        
+        oled.show()
+
+    if finger:
+        threshold = 30000
 
     old_y = Screen.height // 2
 
@@ -151,27 +174,28 @@ def hr_monitor(ReturnBtn, mode: str, Mqtt):
                     current_max = hr_datapoint
                     current_max_interval = timer.count
 
-            if hr_datapoint < threshold and detecting and timer.count > 300:
+            if hr_datapoint < threshold and detecting:
                 detecting = False
+                if timer.count > 300:
 
-                ppi_list.append(current_max_interval)
-                current_max = threshold
-                # print(ppi_list)
-                # print("Timer: ", timer.count)
-                timer.count = 0
-                led.blink()
+                    ppi_list.append(current_max_interval)
+                    current_max = threshold
+                    # print(ppi_list)
+                    # print("Timer: ", timer.count)
+                    timer.count = 0
+                    led.blink()
 
-                if len(ppi_list) > 5:
-                    ppi_list.pop(0)
-                    if sum(ppi_list) != 0:
-                        bpm = calculate_bpm(ppi_list)
-                    else:
-                        print("SUM OF PPI_LIST ZERO")
-                    mean_bpm_list.append(bpm)
+                    if len(ppi_list) > 5:
+                        ppi_list.pop(0)
+                        if sum(ppi_list) != 0:
+                            bpm = calculate_bpm(ppi_list)
+                        else:
+                            print("SUM OF PPI_LIST ZERO")
+                        mean_bpm_list.append(bpm)
 
-                    if len(mean_bpm_list) > 50:
-                        mean_bpm_list.pop(0)
-                print("bpm:", bpm)
+                        if len(mean_bpm_list) > 50:
+                            mean_bpm_list.pop(0)
+                    print("bpm:", bpm)
 
             #Final report for hrv mode, values updated every 30 seconds.
             if time.time() - start_time >= 30 and mode == "hrv":

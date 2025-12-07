@@ -4,6 +4,7 @@ import utime
 
 class Encoder:
     pressed: bool = False
+    on: bool = True
 
     def __init__(self, rot_a, rot_b, rot_btn=None):
         self.a = Pin(rot_a, mode=Pin.IN, pull=Pin.PULL_UP)
