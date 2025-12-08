@@ -102,7 +102,7 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
     timer.count = 0
     detecting = False
     current_max = 1
-    threshold = 35000
+    threshold = 37000 # ARTERY
     current_max_interval = threshold
     ppi_list = []
     mean_bpm_list = []
@@ -134,9 +134,11 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
             oled.text("^", 90, 40)
         
         oled.show()
+    Encoder.pressed = False
+    Encoder.enabled = False
 
     if finger:
-        threshold = 30000
+        threshold = 32500
 
     old_y = Screen.height // 2
 
@@ -167,7 +169,7 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
 
             ### PPI Measuring ###
             print("THRESHOLD:", threshold)
-            print(hr_datapoint)
+            print("VALUE:", hr_datapoint)
             if hr_datapoint >= threshold:
                 detecting = True
                 if hr_datapoint > current_max:
@@ -216,7 +218,8 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
             # draw stats 
             if mode == "hrv":
                 # More stuff
-                draw_stats(0, 0, {"BPM": bpm, "avgBPM": int(mean_bpm)})
+                draw_stats(0, 0, {"avgBPM": int(mean_bpm), "PPI": int(mean_ppi)})
+                draw_stats(40, 28, {"BPM": int(bpm)})
                 draw_stats(0, 54, {"RMSSD": rm, "SDNN": int(sd)})
 
             else:
@@ -224,3 +227,4 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
                 draw_stats(0, 50, {"BPM": bpm})
 
             oled.show()
+    return 0
