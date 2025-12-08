@@ -107,9 +107,9 @@ class KubiosAnalytics:
 
             oled.fill(0)
             oled.text("[Kubios]", 0, 0, 1)
-            oled.text("Select patient", 0, 10, 1)
+            oled.text("[Select]", 65, 0, 1)
 
-            start_y = 24
+            start_y = 12
             step_y = 10
             max_index = len(records)
 

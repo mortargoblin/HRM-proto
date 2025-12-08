@@ -7,7 +7,7 @@ class MQTTManager:
         self.connected = False
         
         # mqtt Config
-        self.MQTT_BROKER = 'groupseven.asuscomm.com'
+        self.MQTT_BROKER = '192.168.7.253'
         self.MQTT_PORT = 21883 
         self.MQTT_USER = 'Rizvan'
         self.MQTT_PASS = 'Group_6Group_7'
@@ -77,8 +77,8 @@ class MQTTManager:
         
         if not wlan.isconnected():
             wlan.connect(WIFI_SSID, WIFI_PASS)
-            #ntptime.host = "pool.ntp.org"
-            #ntptime.settime()
+            ntptime.host = "pool.ntp.org"
+            ntptime.settime()
         
         if wlan.isconnected():
             print('Wi-Fi connected!')
