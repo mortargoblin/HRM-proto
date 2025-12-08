@@ -11,7 +11,10 @@ class Screen:
 i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
 oled = SSD1306_I2C(Screen.width, Screen.height, i2c)
 
-def update_Display(records: dict, counter: int): #Displays patient_records.txt data on the screen
+#-------------------------------------------------#
+# Displays patient_records.txt data on the screen #
+#-------------------------------------------------#
+def update_Display(records: dict, counter: int):
     oled.fill(0)   
     oled.text("[History]", 0, 0,  1)
     oled.text(f"[P-{counter}]", 90, 0, 1)
@@ -34,10 +37,12 @@ def update_Display(records: dict, counter: int): #Displays patient_records.txt d
         oled.text(value, 14, 20 +(8*i))
         oled.show()
 
-def get_Med_History(ReturnBtn: object, Encoder): #Function to convert data from patient_records.txt to be accepted into the function update_Display
+#------------------------------------------------------------#
+# Function to convert text file data to be displayed in oled #
+#------------------------------------------------------------#
+def get_Med_History(ReturnBtn: object, Encoder): 
     records = {}
     counter = 1
-
     oled.fill(0)
     oled.show()
     try: 
@@ -71,8 +76,10 @@ def get_Med_History(ReturnBtn: object, Encoder): #Function to convert data from 
         if ReturnBtn.pressed:
             break
 
-
-def store_Data(datalist): #Storing data into the patient_records.txt file, while controlling the set maximum length of (5) lines
+#-------------------------------------------#
+# Function to store data into the .txt file #
+#-------------------------------------------#
+def store_Data(datalist):
     updated_records = []
     updated_records.append(datalist) #New data to be saved first before pushing out the oldest data off of the patient_records.txt file 
 

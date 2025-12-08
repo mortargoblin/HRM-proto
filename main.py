@@ -54,13 +54,13 @@ def launch(option: int):
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, Encoder=Encoder, mode="hr", Mqtt=Mqtt)
 
     elif option == MenuState.HRV:
-        if Mqtt.connect_wifi():
-            hrlib.hr_monitor(ReturnBtn=ReturnBtn, Encoder=Encoder, mode="hrv", Mqtt=Mqtt)
-        else:
+        #if Mqtt.connect_wifi():
+        hrlib.hr_monitor(ReturnBtn=ReturnBtn, Encoder=Encoder, mode="hrv", Mqtt=Mqtt)
+        """else:
             hrlib.oled.fill(0)
             hrlib.oled.text('[Wi-Fi Error]', 15, 30, 1)
             hrlib.oled.show()
-            time.sleep(1)
+            time.sleep(1)"""
             
     elif option == MenuState.KUBIOS:
         k_status = Kubios.enable()

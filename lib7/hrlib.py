@@ -21,10 +21,18 @@ hrv_cl = hrv.HRV()
 led = buttons.Led()
 #timer = Timer(period=10, mode = Timer.PERIODIC, callback = lambda t: print(1))
 
+
+#-----------------------------------------------------#
+# Function to get the raw digital 16-bit sensor value #
+#-----------------------------------------------------#
 def get_hr():
     HR_Raw = ADC(Pin(27, Pin.IN))
     return int( HR_Raw.read_u16() )
 
+
+#---------------------------------------#
+# Logic for displaying menu in the OLED #
+#---------------------------------------#
 def menu(state: int):
     images = menu_icons.menu_Icons()    
     step_size = 21
@@ -57,6 +65,10 @@ def menu(state: int):
 
     oled.show()
 
+
+#-----------------------------------------------------------------#
+# Function calculate BPM based on an array of recent PPI readings #
+#-----------------------------------------------------------------#
 def calculate_bpm(ppi_list: list[int]):
     if len(ppi_list) < 5:
         raise RuntimeError("List too short")
@@ -65,6 +77,10 @@ def calculate_bpm(ppi_list: list[int]):
 
     return int(60000 / (sum(ppi_list[-5:]) / 5))
 
+
+#---------------------------------------------------#
+# Function for drawing Dynamic HRV data in the OLED #
+#---------------------------------------------------#
 def draw_stats(x: int, y:int, stats):
     font_width = 8
     width = 0
@@ -97,6 +113,10 @@ def draw_stats(x: int, y:int, stats):
                 )
         offset += len(key) * font_width + 30
 
+
+#--------------------------------------------#
+# Function for handling logic behind HR, HRV #
+#--------------------------------------------#
 def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
     timer = Piotimer(freq=1000, callback=lambda t: setattr(timer, "count", timer.count+1))
     timer.count = 0

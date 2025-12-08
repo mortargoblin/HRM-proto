@@ -81,14 +81,8 @@ class MQTTManager:
             return True
         
         elif not wlan.isconnected():
-            try:
-                wlan.connect(WIFI_SSID, WIFI_PASS)
-                ntptime.host = "pool.ntp.org"
-                ntptime.settime()
-                return True
-            
-            except Exception as e:
-                print(f"An error occured when connecting / setting an NTP timezone, {e}")
+            wlan.connect(WIFI_SSID, WIFI_PASS) 
+            return False
         
         else:
             print('WiFi connection failed')
