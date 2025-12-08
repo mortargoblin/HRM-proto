@@ -74,17 +74,24 @@ class MQTTManager:
         
         WIFI_SSID = 'KME_759_Group_7'
         WIFI_PASS = 'Group_6Group_7'
-        
-        if not wlan.isconnected():
-            wlan.connect(WIFI_SSID, WIFI_PASS)
-            ntptime.host = "pool.ntp.org"
-            ntptime.settime()
-        
+
         if wlan.isconnected():
             print('Wi-Fi connected!')
             print('Network config:', wlan.ifconfig())
+            ntptime.host = "pool.ntp.org"
+            ntptime.settime()
             return True
-
+        
+        elif not wlan.isconnected():
+            try:
+                wlan.connect(WIFI_SSID, WIFI_PASS)
+                ntptime.host = "pool.ntp.org"
+                ntptime.settime()
+                return True
+            
+            except Exception as e:
+                print(f"An error occured when connecting / setting an NTP timezone, {e}")
+        
         else:
             print('WiFi connection failed')
             return False
