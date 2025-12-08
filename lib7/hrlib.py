@@ -207,9 +207,9 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
                 #NTP, MEAN PPI, MEAN HR, RMSSD, SDNN
                 time_str = f"{now_time[0] % 100}/{now_time[1]:02d}/{now_time[2]:02d} {2 + now_time[3]:02d}:{now_time[4]:02d}"
                 print(f"NTP: {time_str}")
-                hrv_res = hrv_cl.calc_hrv(mean_bpm_list, ppi_list)
+                (mean_bpm, mean_ppi, rm, sd) = hrv_cl.calc_hrv(mean_bpm_list, ppi_list)
                     
-                data = [f"{time_str}", f"AVG_BPM: {hrv_res[0]}", f"AVG_PPI: {hrv_res[1]}", f"RMSSD: {hrv_res[2]}", f"SDNN: {hrv_res[3]}"]
+                data = [f"{time_str}", f"AVG_BPM: {mean_bpm}", f"AVG_PPI: {mean_ppi}", f"RMSSD: {rm}", f"SDNN: {sd}"]
 
                 if Mqtt.connected: #Data published to MQTT every 30 seconds
                     Mqtt.publish(f"{Mqtt.TOPIC_HRV}", f"{data}")
@@ -220,11 +220,16 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
                 # More stuff
                 draw_stats(0, 0, {"avgBPM": int(mean_bpm), "PPI": int(mean_ppi)})
                 draw_stats(40, 28, {"BPM": int(bpm)})
-                draw_stats(0, 54, {"RMSSD": rm, "SDNN": int(sd)})
+                draw_stats(0, 54, {"RMSSD": int(rm), "SDNN": int(sd)})
 
             else:
                 # BPM only
                 draw_stats(0, 50, {"BPM": bpm})
 
+            if timer.count > 30000: # arbitrary timer reset :D
+                timer.count = 0
+
             oled.show()
+
+    timer.__del__()
     return 0
