@@ -76,8 +76,6 @@ class MQTTManager:
         WIFI_PASS = 'Group_6Group_7'
 
         if wlan.isconnected():
-            print('Wi-Fi connected!')
-            print('Network config:', wlan.ifconfig())
             ntptime.host = "pool.ntp.org"
             ntptime.settime()
             return True
@@ -95,12 +93,3 @@ class MQTTManager:
         else:
             print('WiFi connection failed')
             return False
-            
-    def check_connection(self):
-        try:
-            if self.connected and self.client:
-                return True
-            return False
-        
-        except Exception as e:
-            return f"Exception occurred: {e}"
