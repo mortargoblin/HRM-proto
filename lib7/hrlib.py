@@ -101,9 +101,12 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
     timer = Piotimer(freq=1000, callback=lambda t: setattr(timer, "count", timer.count+1))
     timer.count = 0
     detecting = False
-    current_max = 1
-    threshold = 37000 # ARTERY
+    threshold_default = 37000 # ARTERY
+    threshold = threshold_default
+    current_max = 0
     current_max_interval = threshold
+
+    hr_datapoint_arr = []
     ppi_list = []
     mean_bpm_list = []
     bpm = 0
@@ -112,33 +115,12 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
     rm = 0
     sd = 0
 
+
     hr_buffer = Fifo(size=5)
     start_time = time.time()
 
-    finger = False
-    while not Encoder.pressed:
-        oled.fill(0)
-        if not Encoder.fifo.empty():
-            fifo_value = Encoder.fifo.get()
-            if fifo_value == 1:
-                finger = True
-            elif fifo_value == -1:
-                finger = False
-
-        oled.text("Artery", 10, 28)
-        oled.text("Finger", 70, 28)
-
-        if finger == False:
-            oled.text("^", 30, 40)
-        elif finger == True:
-            oled.text("^", 90, 40)
-        
-        oled.show()
     Encoder.pressed = False
     Encoder.enabled = False
-
-    if finger:
-        threshold = 32500
 
     old_y = Screen.height // 2
 
@@ -152,7 +134,9 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
 
             hr_buffer.put(get_hr())
             hr_datapoint = hr_buffer.get()
-            # print(hr_datapoint)
+            hr_datapoint_arr.append(hr_datapoint)
+            if len(hr_datapoint_arr) > 100:
+                hr_datapoint_arr.pop(0)
 
             ### Drawing ###
             y = int( Screen.height - (hr_datapoint / 65536 * Screen.height ) )
@@ -176,28 +160,31 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
                     current_max = hr_datapoint
                     current_max_interval = timer.count
 
-            if hr_datapoint < threshold and detecting:
+            if hr_datapoint < threshold and detecting and timer.count > 300:
                 detecting = False
-                if timer.count > 300:
 
-                    ppi_list.append(current_max_interval)
-                    current_max = threshold
-                    # print(ppi_list)
-                    # print("Timer: ", timer.count)
-                    timer.count = 0
-                    led.blink()
+                ppi_list.append(current_max_interval)
+                current_max = 0
+                # print(ppi_list)
+                # print("Timer: ", timer.count)
+                timer.count = 0
+                led.blink()
 
-                    if len(ppi_list) > 5:
-                        ppi_list.pop(0)
-                        if sum(ppi_list) != 0:
-                            bpm = calculate_bpm(ppi_list)
-                        else:
-                            print("SUM OF PPI_LIST ZERO")
-                        mean_bpm_list.append(bpm)
+                if len(ppi_list) > 5:
+                    ppi_list.pop(0)
+                    if sum(ppi_list) != 0:
+                        bpm = calculate_bpm(ppi_list)
+                    else:
+                        print("SUM OF PPI_LIST ZERO")
+                    mean_bpm_list.append(bpm)
 
-                        if len(mean_bpm_list) > 50:
-                            mean_bpm_list.pop(0)
-                    print("bpm:", bpm)
+                    if len(mean_bpm_list) > 50:
+                        mean_bpm_list.pop(0)
+                print("bpm:", bpm)
+            
+            # update threshold (HARAM method)
+            hr_datapoint_avg = int((sum(hr_datapoint_arr) / len(hr_datapoint_arr)))
+            threshold = (hr_datapoint_avg + sorted(hr_datapoint_arr)[-1]) / 2
 
             #Final report for hrv mode, values updated every 30 seconds.
             if time.time() - start_time >= 30 and mode == "hrv":
@@ -219,15 +206,16 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
             if mode == "hrv":
                 # More stuff
                 draw_stats(0, 0, {"avgBPM": int(mean_bpm), "PPI": int(mean_ppi)})
-                draw_stats(40, 28, {"BPM": int(bpm)})
+                draw_stats(0, 44, {"BPM": int(bpm)})
                 draw_stats(0, 54, {"RMSSD": int(rm), "SDNN": int(sd)})
 
             else:
                 # BPM only
                 draw_stats(0, 50, {"BPM": bpm})
 
-            if timer.count > 30000: # arbitrary timer reset :D
+            if timer.count > 3000: # arbitrary timer and threshold reset :D
                 timer.count = 0
+                threshold = threshold_default
 
             oled.show()
 
