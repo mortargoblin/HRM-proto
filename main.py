@@ -2,7 +2,6 @@ from machine import Pin
 from lib7 import buttons, hrlib, kubios, mqtt, history, animations
 import micropython
 import time
-
 micropython.alloc_emergency_exception_buf(200)
 
 
@@ -31,6 +30,10 @@ animator = animations.Animations(hrlib.oled)
 # Class for handling kubios services #
 Kubios = kubios.KubiosAnalytics()
 
+
+#-----------#
+# Main Loop #
+#-----------#
 def main():
     current_state = MenuState.HR_DISPLAY
 
@@ -54,6 +57,10 @@ def main():
         if ReturnBtn.pressed:
             ReturnBtn.pressed = False
 
+
+#--------------------------------------------------------------------------------#
+# Function for running different modes on the device: (HR, HRV, KUBIOS, HISTORY) #
+#--------------------------------------------------------------------------------#
 def launch(option: int):
     if option == MenuState.HR_DISPLAY:
         print("Encoder.pressed:", Encoder.pressed)
@@ -73,6 +80,7 @@ def launch(option: int):
 
     elif option == MenuState.HISTORY:
         history.get_Med_History(ReturnBtn=ReturnBtn, Encoder=Encoder)
-        
+
+
 if __name__=="__main__":
     main()
