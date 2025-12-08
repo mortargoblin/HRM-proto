@@ -4,8 +4,7 @@ import json
 import time
 import framebuf
 
-class KubiosAnalytics:
-    
+class KubiosAnalytics:  
     def __init__(self):
         self.enabled: bool = False
         self.data_buffer = []

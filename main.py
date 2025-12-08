@@ -2,6 +2,7 @@ from machine import Pin
 from lib7 import buttons, hrlib, kubios, mqtt, history, animations
 import micropython
 import time
+import uasyncio as asyncio
 micropython.alloc_emergency_exception_buf(200)
 
 
@@ -34,7 +35,7 @@ Kubios = kubios.KubiosAnalytics()
 #-----------#
 # Main Loop #
 #-----------#
-def main():
+async def main():
     current_state = MenuState.HR_DISPLAY
 
     ### MAIN LOOP ###
@@ -52,35 +53,39 @@ def main():
         # rotary encoder button handling
         if Encoder.pressed:
             Encoder.pressed = False
-            launch(current_state)
+            await launch(current_state)
 
         if ReturnBtn.pressed:
             ReturnBtn.pressed = False
 
-
+        await asyncio.sleep(0)
 #--------------------------------------------------------------------------------#
 # Function for running different modes on the device: (HR, HRV, KUBIOS, HISTORY) #
 #--------------------------------------------------------------------------------#
-def launch(option: int):
+async def launch(option: int):
     if option == MenuState.HR_DISPLAY:
-        print("Encoder.pressed:", Encoder.pressed)
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, Encoder=Encoder, mode="hr", Mqtt=Mqtt)
 
-    elif option == MenuState.HRV:
-        if Mqtt.connect_wifi():
+    elif option in [MenuState.HRV, MenuState.KUBIOS]:
+        # Loading Screen Animation #
+        loading_screen = asyncio.create_task(animator.loading_animation())
+        wifi_connect = asyncio.create_task(Mqtt.connect_wifi())      
+        wifi_enabled = await wifi_connect
+        loading_screen.cancel()
+        await asyncio.sleep(0.05)
+
+        if option == MenuState.HRV: #and wifi_enabled
             hrlib.hr_monitor(ReturnBtn=ReturnBtn, Encoder=Encoder, mode="hrv", Mqtt=Mqtt)
-        else:
-            animator.enabling_error_animation(mode = "hrv")   
-            
-    elif option == MenuState.KUBIOS:    
-        if Kubios.enable():
+
+        elif option == MenuState.KUBIOS and (Kubios.enabled or Kubios.enable()):        
             Kubios.select_and_send(ReturnBtn=ReturnBtn, Encoder=Encoder)
+            
         else:
-            animator.enabling_error_animation(mode = "kubios")    
+            animator.enabling_error_animation(option, MenuState)    
 
     elif option == MenuState.HISTORY:
         history.get_Med_History(ReturnBtn=ReturnBtn, Encoder=Encoder)
 
 
 if __name__=="__main__":
-    main()
+    asyncio.run(main())

@@ -1,5 +1,6 @@
 from umqtt.simple import MQTTClient
 import ubinascii, machine, network, ntptime
+import uasyncio as asyncio
 
 class MQTTManager:
     def __init__(self):
@@ -68,22 +69,24 @@ class MQTTManager:
                 pass
             self.connected = False
     
-    def connect_wifi(self):
+    async def connect_wifi(self):
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
         
         WIFI_SSID = 'KME_759_Group_7'
         WIFI_PASS = 'Group_6Group_7'
-
+        
         if wlan.isconnected():
-            ntptime.host = "pool.ntp.org"
-            ntptime.settime()
             return True
-        
-        elif not wlan.isconnected():
-            wlan.connect(WIFI_SSID, WIFI_PASS) 
-            return False
-        
-        else:
-            print('WiFi connection failed')
-            return False
+
+        wlan.connect(WIFI_SSID, WIFI_PASS)
+
+        for _ in range(100):  
+            if wlan.isconnected():
+                ntptime.host = "pool.ntp.org"
+                ntptime.settime()
+                return True
+            await asyncio.sleep(0.05)
+
+        print("WiFi connection failed")
+        return False

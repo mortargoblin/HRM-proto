@@ -2,23 +2,25 @@ import time
 import framebuf
 from machine import Pin, I2C
 from ssd1306 import SSD1306_I2C
+import uasyncio as asyncio
 
 class Animations:
     def __init__(self, oled):
         self.oled = oled
     
-    def loading_animation(self, duration=2):
+    async def loading_animation(self):
         frames = ['|', '/', '-', '\\']
         start_time = time.time()
         frame = 0
         
-        while time.time() - start_time < duration:
+        while True:
             self.oled.fill(0)
             self.oled.text("Loading", 40, 20)
             self.oled.text(frames[frame % 4], 60, 40)
             self.oled.show()
-            time.sleep(0.1)
             frame += 1
+            await asyncio.sleep(0.05)
+            
     
     def pulsing_heart(self, x=54, y=20, duration=1):
         heart_frames = [
@@ -53,22 +55,21 @@ class Animations:
             self.oled.show()
             time.sleep(0.01)
 
-    def enabling_error_animation(self, mode):
+    def enabling_error_animation(self, mode, state):
         self.oled.fill(0)
         msg = ['[Exception]']      
         x = 15
-        y = 30
 
-        if mode == 'hrv':
+        if mode == state.HRV:
             msg = ['[Wi-Fi]', 'Error']
-            x = 35
-
-        elif mode == 'kubios':
+            x = 38
+            y = 8
+        elif mode == state.KUBIOS:
             msg = ['[Wi-Fi/MQTT]', 'Error']
-            x = 10
-
+            x = 16
+            y = 30
         for i in range(len(msg)):
-            self.oled.text(f'{msg[i]}', x, y + (i*10), 1)
+            self.oled.text(f'{msg[i]}', x + (i*y), 22 + (i*8), 1)
         
         self.oled.show()
         time.sleep(1)
