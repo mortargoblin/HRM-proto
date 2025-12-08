@@ -7,6 +7,7 @@ class HRV:
     def calc_hrv(self, avg_bpm_list, ppi_list):
         self.avg_bpm_list = avg_bpm_list
         self.ppi_list = ppi_list
+        self.hrv_results = []
         self.avg_bpm()
         return self.hrv_results
 
