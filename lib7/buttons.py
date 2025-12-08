@@ -4,7 +4,7 @@ import utime
 
 class Encoder:
     pressed: bool = False
-    on: bool = True
+    enabled: bool = True
 
     def __init__(self, rot_a, rot_b, rot_btn=None):
         self.a = Pin(rot_a, mode=Pin.IN, pull=Pin.PULL_UP)
@@ -17,10 +17,11 @@ class Encoder:
             self.btn.irq(handler=self.button_handler, trigger=Pin.IRQ_FALLING)
 
     def handler(self, pin):
-        if self.b.value():
-            self.fifo.put(-1)
-        else:
-            self.fifo.put(1)
+        if self.enabled:
+            if self.b.value():
+                self.fifo.put(-1)
+            else:
+                self.fifo.put(1)
 
 
     def button_handler(self, pin):
