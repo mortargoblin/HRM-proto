@@ -1,7 +1,7 @@
 import time
 import framebuf
 from machine import Pin, I2C
-from lib7.ssd1306 import SSD1306_I2C
+from ssd1306 import SSD1306_I2C
 
 class Animations:
     def __init__(self, oled):
@@ -52,3 +52,23 @@ class Animations:
                 self.oled.scroll(0, 8)
             self.oled.show()
             time.sleep(0.01)
+
+    def enabling_error_animation(self, mode):
+        self.oled.fill(0)
+        msg = ['[Exception]']      
+        x = 15
+        y = 30
+
+        if mode == 'hrv':
+            msg = ['[Wi-Fi]', 'Error']
+            x = 35
+
+        elif mode == 'kubios':
+            msg = ['[Wi-Fi/MQTT]', 'Error']
+            x = 10
+
+        for i in range(len(msg)):
+            self.oled.text(f'{msg[i]}', x, y + (i*10), 1)
+        
+        self.oled.show()
+        time.sleep(1)
