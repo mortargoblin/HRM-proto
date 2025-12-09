@@ -17,15 +17,18 @@ oled = SSD1306_I2C(Screen.width, Screen.height, i2c)
 def update_Display(records: dict, counter: int):
     oled.fill(0)   
     oled.text("[History]", 0, 0,  1)
-    oled.text(f"[P-{counter}]", 90, 0, 1)
+    oled.text(f"   P-{counter}", 70, 0, 1)
+
+    max_index = len(records)
     
-    if counter == 1:
-        oled.text(">", 120, 32)
-    elif counter in [2, 3, 4]:
-        oled.text("<", 0, 32)
-        oled.text(">", 120, 32)
-    else:
-        oled.text("<", 0, 32)
+    if max_index > 1:
+        if counter == 1:
+            oled.text(">", 120, 32)
+        elif counter == max_index:
+            oled.text("<", 0, 32)
+        else:
+            oled.text("<", 0, 32)
+            oled.text(">", 120, 32)
     oled.show()
 
     # A list of data consisting of BPM, PPI, RMSSD, SDNN.
@@ -34,7 +37,8 @@ def update_Display(records: dict, counter: int):
     for i in range(len(values)):
         time.sleep(0.05)
         value = values[i].strip("'")
-        oled.text(value, 14, 20 +(8*i))
+        # limit text length to screen width (16 chars max with default font)
+        oled.text(value[:16], 14, 20 +(8*i))
         oled.show()
 
 #------------------------------------------------------------#
@@ -50,6 +54,8 @@ def get_Med_History(ReturnBtn: object, Encoder):
             lines = 0
             for line in file:
                 line = line.strip()
+                if not line:
+                    continue
                 line = line[1:-1]
                 record = line.split(", ")
                 records.update({f"Patient[{lines+1}]" : record})          
@@ -58,18 +64,23 @@ def get_Med_History(ReturnBtn: object, Encoder):
     except Exception as e:
         print(f'Error: {e}')
     
+    if not records:
+        return
+    
+    max_index = len(records)
+
     #First record displayed:
-    update_Display(records, 1)
+    update_Display(records, counter)
 
     while not ReturnBtn.pressed:
         if Encoder.fifo.has_data():
             rotator = Encoder.fifo.get()
 
-            if rotator == 1 and 1 <= counter < 5:
+            if rotator == 1 and counter < max_index:
                 counter += 1
                 update_Display(records, counter)   
                 
-            elif rotator == -1 and 1 < counter <= 5:
+            elif rotator == -1 and counter > 1:
                 counter -= 1
                 update_Display(records, counter)
 

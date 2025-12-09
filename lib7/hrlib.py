@@ -207,26 +207,41 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
             threshold = (hr_datapoint_avg + sorted(hr_datapoint_arr)[-1]) / 2
 
             #Final report for hrv mode, values updated every 30 seconds.
-            if time.time() - start_time >= 30 and mode == "hrv":
+            if time.time() - start_time >= 30 and mode in ("hrv", "kubios"):
                 now_time = utime.localtime(start_time)
                 start_time = time.time()
 
                 #NTP, MEAN PPI, MEAN HR, RMSSD, SDNN
                 time_str = f"{now_time[0] % 100}/{now_time[1]:02d}/{now_time[2]:02d} {2 + now_time[3]:02d}:{now_time[4]:02d}"
                 print(f"NTP: {time_str}")
-                (mean_bpm, mean_ppi, rm, sd) = hrv_cl.calc_hrv(mean_bpm_list, ppi_list)
-                    
-                data = [f"{time_str}", f"AVG_BPM: {mean_bpm}", f"AVG_PPI: {mean_ppi}", f"RMSSD: {rm}", f"SDNN: {sd}"]
+                hrv_res = hrv_cl.calc_hrv(mean_bpm_list, ppi_list)
 
-                if Mqtt.connected: #Data published to MQTT every 30 seconds
-                    Mqtt.publish(f"{Mqtt.TOPIC_HRV}", f"{data}")
-                history.store_Data(datalist=data)
+                mean_bpm = hrv_res[0]
+                mean_ppi = hrv_res[1]
+                rm = hrv_res[2]
+                sd = hrv_res[3]
+                    
+                if mode == "hrv":
+                    data = [
+                        f"{time_str}",
+                        f"AVG_BPM: {mean_bpm}",
+                        f"AVG_PPI: {mean_ppi}",
+                        f"RMSSD: {rm}",
+                        f"SDNN: {sd}",
+                    ]
+                    if Mqtt and Mqtt.connected: #Data published to MQTT every 30 seconds
+                        Mqtt.publish(f"{Mqtt.TOPIC_HRV}", f"{data}")
+                    history.store_Data(datalist=data)
+
+                else: #kubios mode
+                    timer.__del__()
+                    return (mean_ppi, mean_bpm, sd, rm)
 
             # draw stats 
             if mode == "hrv":
                 # More stuff
                 draw_stats(0, 0, {"avgBPM": int(mean_bpm), "PPI": int(mean_ppi)})
-                draw_stats(0, 44, {"BPM": int(bpm)})
+                draw_stats(40, 28, {"BPM": int(bpm)})
                 draw_stats(0, 54, {"RMSSD": int(rm), "SDNN": int(sd)})
 
             else:

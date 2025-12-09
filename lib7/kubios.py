@@ -47,7 +47,7 @@ class KubiosAnalytics:
         
         try:
             message = json.dumps(data)
-            success = self.mqtt_manager.publish("kubios/request", message)
+            success = self.mqtt_manager.publish(self.mqtt_manager.TOPIC_KUBIOS_REQUEST, message)
             if success:
                 print(f"HRV data sent to Kubios: BPM={mean_bpm}, SDNN={sdnn}")
             return success
@@ -55,24 +55,6 @@ class KubiosAnalytics:
             print(f"Failed to send HRV data: {e}")
             return False
                 
-            data = {
-                "mean_ppi": mean_ppi,
-                "mean_bpm": mean_bpm,
-                "sdnn": sdnn,
-                "rmssd": rmssd,
-                "timestamp": time.time()
-            }
-            
-            try:
-                message = json.dumps(data)
-                success = self.mqtt_manager.publish(self.mqtt_manager.TOPIC_HRV, message)
-                if success:
-                    print(f"HRV data sent to Kubios: BPM={mean_bpm}, SDNN={sdnn}")
-                return success
-            except Exception as e:
-                print(f"Failed to send HRV data: {e}")
-                return False
-
     def select_and_send(self, ReturnBtn, Encoder):
         if not self.enabled:
             print("Kubios not enabled")
@@ -106,9 +88,9 @@ class KubiosAnalytics:
 
             oled.fill(0)
             oled.text("[Kubios]", 0, 0, 1)
-            oled.text("[Select]", 65, 0, 1)
+            oled.text("Select patient", 0, 10, 1)
 
-            start_y = 12
+            start_y = 24
             step_y = 10
             max_index = len(records)
 
@@ -118,7 +100,7 @@ class KubiosAnalytics:
                 #icon
                 oled.blit(icon_fb, 0, y - 2)
 
-                label = f"P-{i}"
+                label = f"Patient {i}"
 
                 #arrow
                 if i == counter:
@@ -168,22 +150,50 @@ class KubiosAnalytics:
                 # show loading
                 oled.fill(0)
                 oled.text("[Kubios]", 0, 0, 1)
-                oled.text(f"Sending P-{counter}", 0, 20, 1)
+                oled.text(f"Sending Patient {counter}", 0, 20, 1)
                 oled.text(date_str, 0, 30, 1)
                 oled.show()
 
                 print("Sending to Kubios:", date_str, mean_bpm, mean_ppi, rmssd, sdnn)
                 success = self.send_hrv_data(mean_ppi, mean_bpm, sdnn, rmssd)
 
-                #show result
+                if not success:
+                    #show result
+                    oled.fill(0)
+                    oled.text("[Kubios]", 0, 0, 1)
+                    oled.text("Error sending", 0, 20, 1)
+                    oled.show()
+                    time.sleep(1)
+
+                    #back to selection
+                    Encoder.pressed = False
+                    draw_kubios_select(counter)
+                    continue
+
+                #Wait for kubios result
                 oled.fill(0)
                 oled.text("[Kubios]", 0, 0, 1)
-                if success:
-                    oled.text("Done", 0, 20, 1)
-                else:
-                    oled.text("Error sending", 0, 20, 1)
+                oled.text("Waiting result", 0, 20, 1)
                 oled.show()
-                time.sleep(1)
+
+                response = None
+                if hasattr(self.mqtt_manager, "wait_for_kubios_result"):
+                    response = self.mqtt_manager.wait_for_kubios_result(timeout=10)
+
+                #Display result
+                oled.fill(0)
+                oled.text("[Kubios]", 0, 0, 1)
+
+                if response:
+                    oled.text("Result:", 0, 12, 1)
+                    resp_str = str(response)
+                    oled.text(resp_str[:16], 0, 22, 1)
+                    oled.text(resp_str[16:32], 0, 32, 1)
+                else:
+                    oled.text("No response", 0, 20, 1)
+
+                oled.show()
+                time.sleep(3)
 
                 #back to selection
                 Encoder.pressed = False

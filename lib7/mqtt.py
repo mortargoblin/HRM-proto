@@ -1,6 +1,5 @@
 from umqtt.simple import MQTTClient
-import ubinascii, machine, network, ntptime
-import uasyncio as asyncio
+import ubinascii, machine, network, ntptime, time
 
 class MQTTManager:
     def __init__(self):
@@ -18,6 +17,9 @@ class MQTTManager:
         self.TOPIC_HR = 'hr_monitor/heart_rate'
         self.TOPIC_HRV = 'hr_monitor/hrv_data'
         self.TOPIC_STATUS = 'hr_monitor/status'
+        self.TOPIC_KUBIOS_REQUEST = 'kubios/request'
+        self.TOPIC_KUBIOS_RESPONSE = 'kubios/response'
+    
     
     def connect_mqtt(self):
         try:
@@ -33,9 +35,10 @@ class MQTTManager:
             print("Connecting to MQTT:", self.MQTT_BROKER, self.MQTT_PORT)
             self.client.connect()
             self.connected = True
-
-            self.client.publish(self.TOPIC_STATUS, b"online")
             print("MQTT connected.")
+            
+            self.client.publish(self.TOPIC_STATUS, b"online")
+            
             return True
             
         except Exception as e:
@@ -44,21 +47,20 @@ class MQTTManager:
             return False
     
     def publish(self, topic, message):
-        # ensure connection
-        if not self.connected or not self.client:
-            if not self.connect_mqtt():
-                print("MQTT reconnect failed, can't publish.")
-                return False
-            
         try:
+            if not self.client or not self.connected:
+                if not self.connect_mqtt():
+                    print("MQTT reconnect failed, can't publish.")
+                    return False
+            
             self.client.publish(topic, message)
             print("Publish successful.")
             return True
-            
+        
         except Exception as e:
             print("MQTT Publish failed:", e)
             self.connected = False
-            
+            return False
     
     def disconnect(self):
         if self.client and self.connected:
@@ -69,24 +71,69 @@ class MQTTManager:
                 pass
             self.connected = False
     
-    async def connect_wifi(self):
+    def connect_wifi(self):
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
         
         WIFI_SSID = 'KME_759_Group_7'
         WIFI_PASS = 'Group_6Group_7'
         
+        if not wlan.isconnected():
+            wlan.connect(WIFI_SSID, WIFI_PASS)
+            #ntptime.host = "pool.ntp.org"
+            #ntptime.settime()
+        
         if wlan.isconnected():
+            print('Wi-Fi connected!')
+            print('Network config:', wlan.ifconfig())
             return True
 
-        wlan.connect(WIFI_SSID, WIFI_PASS)
+        else:
+            print('WiFi connection failed')
+            return False
 
-        for _ in range(100):  
-            if wlan.isconnected():
-                ntptime.host = "pool.ntp.org"
-                ntptime.settime()
+    def wait_for_kubios_result(self, timeout=10):
+        if not self.connected or not self.client:
+            if not self.connect_mqtt():
+                return None
+
+        result = {"value": None}
+
+        def callback(topic, msg):
+            try:
+                if topic.decode() == self.TOPIC_KUBIOS_RESPONSE:
+                    result["value"] = msg.decode()
+            except Exception as e:
+                print(f"Kubios callback error: {e}")
+
+        try:
+            self.client.set_callback(callback)
+            self.client.subscribe(self.TOPIC_KUBIOS_RESPONSE)
+        except Exception as e:
+            print(f"Subscribe failed: {e}")
+            return None
+
+        start = time.time()
+        while result["value"] is None and (time.time() - start < timeout):
+            try:
+                self.client.check_msg()
+            except Exception as e:
+                print(f"Error while waiting kubios result: {e}")
+                break
+            time.sleep(0.1)
+
+        try:
+            self.client.set_callback(None)
+        except:
+            pass
+
+        return result["value"]
+            
+    def check_connection(self):
+        try:
+            if self.connected and self.client:
                 return True
-            await asyncio.sleep(0.05)
-
-        print("WiFi connection failed")
-        return False
+            return False
+        
+        except Exception as e:
+            return f"Exception occurred: {e}"
