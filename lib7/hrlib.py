@@ -183,20 +183,21 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
             if hr_datapoint < threshold and detecting and timer.count > 300:
                 detecting = False
 
-                ppi_list.append(current_max_interval)
-                current_max = 0
-                # print(ppi_list)
-                # print("Timer: ", timer.count)
-                timer.count = 0
-                led.blink()
+                if current_max_interval > 300:
+                    ppi_list.append(current_max_interval)
+                    current_max = 0
+                    # print(ppi_list)
+                    # print("Timer: ", timer.count)
+                    timer.count = 0
+                    led.blink()
 
-                if len(ppi_list) > 5:
-                    ppi_list.pop(0)
-                    if sum(ppi_list) != 0:
-                        bpm = calculate_bpm(ppi_list)
-                    else:
-                        print("SUM OF PPI_LIST ZERO")
-                    mean_bpm_list.append(bpm)
+                    if len(ppi_list) > 5:
+                        ppi_list.pop(0)
+                        if sum(ppi_list) != 0:
+                            bpm = calculate_bpm(ppi_list)
+                        else:
+                            print("SUM OF PPI_LIST ZERO")
+                        mean_bpm_list.append(bpm)
 
                     if len(mean_bpm_list) > 50:
                         mean_bpm_list.pop(0)
