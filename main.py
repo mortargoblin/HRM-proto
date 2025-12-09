@@ -5,13 +5,6 @@ import time
 import uasyncio as asyncio
 micropython.alloc_emergency_exception_buf(200)
 
-#Clear history file on each run
-try:
-    with open('patient_records.txt', 'w') as f:
-        pass
-except Exception as e:
-    print("Could not reset history file:", e)
-
 #---------#
 # CLASSES #
 #---------#
