@@ -65,6 +65,11 @@ def get_Med_History(ReturnBtn: object, Encoder):
         print(f'Error: {e}')
     
     if not records:
+        oled.fill(0)
+        oled.text("[History]", 0, 0, 1)
+        oled.text("No records yet", 0, 20, 1)
+        oled.show()
+        time.sleep(2)
         return
     
     max_index = len(records)

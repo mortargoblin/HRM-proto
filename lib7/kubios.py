@@ -47,6 +47,7 @@ class KubiosAnalytics:
         
         try:
             message = json.dumps(data)
+            print("KUBIOS REQUEST:", message)
             success = self.mqtt_manager.publish(self.mqtt_manager.TOPIC_KUBIOS_REQUEST, message)
             if success:
                 print(f"HRV data sent to Kubios: BPM={mean_bpm}, SDNN={sdnn}")
