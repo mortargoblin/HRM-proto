@@ -32,7 +32,7 @@ class KubiosAnalytics:
         self.enabled = False
         print("Kubios analytics disabled")
     
-    def send_hrv_data(self, mean_ppi, mean_bpm, sdnn, rmssd):
+    def send_hrv_data(self, mean_ppi, mean_bpm, sdnn, rmssd, timestamp=None):
         if not self.enabled:
             print("Kubios not enabled")
             return False
@@ -42,7 +42,7 @@ class KubiosAnalytics:
             "mean_bpm": mean_bpm,
             "sdnn": sdnn,
             "rmssd": rmssd,
-            "timestamp": time.time()
+            "timestamp": timestamp if timestamp is not None else time.time()
         }
         
         try:
@@ -155,7 +155,7 @@ class KubiosAnalytics:
                 oled.show()
 
                 print("Sending to Kubios:", date_str, mean_bpm, mean_ppi, rmssd, sdnn)
-                success = self.send_hrv_data(mean_ppi, mean_bpm, sdnn, rmssd)
+                success = self.send_hrv_data(mean_ppi, mean_bpm, sdnn, rmssd, date_str)
 
                 if not success:
                     #show result
