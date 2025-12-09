@@ -28,37 +28,31 @@ class KubiosAnalytics:
             print(f"Exception occurred: {e}")
             return False
     
-    def disable(self):
-        self.enabled = False
-        print("Kubios analytics disabled")
-    
-    def send_hrv_data(self, mean_ppi, mean_bpm, sdnn, rmssd, timestamp=None):
-        if not self.enabled:
-            print("Kubios not enabled")
-            return False
-            
+    def send_hrv_data(self, avg_ppi_list):
         data = {
-            "mean_ppi": mean_ppi,
-            "mean_bpm": mean_bpm,
-            "sdnn": sdnn,
-            "rmssd": rmssd,
-            "timestamp": timestamp if timestamp is not None else time.time()
-        }
+            "type": "RR",
+            "data": {
+                "content": avg_ppi_list,
+                "format": "values"
+                }
+            }
+        message = json.dumps(data)
         
         try:
-            message = json.dumps(data)
-            success = self.mqtt_manager.publish(self.mqtt_manager.TOPIC_KUBIOS_REQUEST, message)
-            if success:
-                print(f"HRV data sent to Kubios: BPM={mean_bpm}, SDNN={sdnn}")
-            return success
+            payload_sent = self.mqtt_manager.publish(self.mqtt_manager.TOPIC_KUBIOS_REQUEST, message)
+
+            if payload_sent:
+                print(f"HRV data sent to Kubios: {avg_ppi_list}")
+            return payload_sent
+
         except Exception as e:
             print(f"Failed to send HRV data: {e}")
             return False
                 
     def select_and_send(self, ReturnBtn, Encoder):
-        if not self.enabled:
+        """if not self.enabled:
             print("Kubios not enabled")
-            return
+            return"""
 
         records = {}
         try:
@@ -127,19 +121,15 @@ class KubiosAnalytics:
                     counter -= 1
                     draw_kubios_select(counter)
 
-            #press to send this patient to Kubios
+            #Press to send corresponding patient's ppi-list to Kubios Cloud:
             if Encoder.pressed:
                 key = f"Patient[{counter}]"
                 values = records[key]
 
-                #values structure is like
-                #["'25/11/2025'", "'AVG_BPM: 69'", "'AVG_PPI: 22'", "'RMSSD: 10'", "'SDNN: 03'"]
                 try:
-                    date_str = values[0].strip("'")
-                    mean_bpm = int(values[1].strip("'").split(":")[1].strip())
-                    mean_ppi = int(values[2].strip("'").split(":")[1].strip())
-                    rmssd = int(values[3].strip("'").split(":")[1].strip())
-                    sdnn = int(values[4].strip("'").split(":")[1].strip())
+                    clean_ppi_list = [int(''.join(filter(str.isdigit, item))) for item in values[5:]]
+                    print(clean_ppi_list)
+                
                 except Exception as e:
                     print("Failed to parse patient record:", e)
                     Encoder.pressed = False
@@ -154,8 +144,8 @@ class KubiosAnalytics:
                 oled.text(date_str, 0, 30, 1)
                 oled.show()
 
-                print("Sending to Kubios:", date_str, mean_bpm, mean_ppi, rmssd, sdnn)
-                success = self.send_hrv_data(mean_ppi, mean_bpm, sdnn, rmssd, date_str)
+                print("Sending to Kubios:", clean_ppi_list)
+                success = self.send_hrv_data(clean_ppi_list)
 
                 if not success:
                     #show result
@@ -195,7 +185,7 @@ class KubiosAnalytics:
                 oled.show()
                 time.sleep(3)
 
-                #back to selection
+                #Backs up to selecting a patient
                 Encoder.pressed = False
                 draw_kubios_select(counter)
 

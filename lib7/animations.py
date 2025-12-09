@@ -20,8 +20,7 @@ class Animations:
             self.oled.show()
             frame += 1
             await asyncio.sleep(0.05)
-            
-    
+              
     def pulsing_heart(self, x=54, y=20, duration=1):
         heart_frames = [
             [0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00],

@@ -33,8 +33,7 @@ def update_Display(records: dict, counter: int):
 
     # A list of data consisting of BPM, PPI, RMSSD, SDNN.
     values = records[f"Patient[{counter}]"]
-    
-    for i in range(len(values)):
+    for i in range(5):
         time.sleep(0.05)
         value = values[i].strip("'")
         # limit text length to screen width (16 chars max with default font)
@@ -109,6 +108,6 @@ def store_Data(datalist):
         with open('patient_records.txt', 'w') as file:
             file.write(f'\n'.join(map(str, updated_records))) #Finally stores the new array of data inside the file, whilst first converting all nested arrays to strings and separating each with a lineswitch
             file.seek(0)
-            
+    
     except Exception as e:
         print(f'Error storing data: {e}')

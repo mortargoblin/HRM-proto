@@ -69,14 +69,15 @@ async def launch(option: int):
     elif option in [MenuState.HRV, MenuState.KUBIOS]:
         # Loading Screen Animation #
         loading_screen = asyncio.create_task(animator.loading_animation())
-        wifi_enabled = Mqtt.connect_wifi()
+        wifi_connect = asyncio.create_task(Mqtt.connect_wifi())      
+        wifi_enabled = await wifi_connect
         loading_screen.cancel()
         await asyncio.sleep(0.05)
 
-        if option == MenuState.HRV: #and wifi_enabled:
+        if option == MenuState.HRV: #and wifi_enabled
             hrlib.hr_monitor(ReturnBtn=ReturnBtn, Encoder=Encoder, mode="hrv", Mqtt=Mqtt)
 
-        elif option == MenuState.KUBIOS and wifi_enabled and (Kubios.enabled or Kubios.enable()):
+        elif option == MenuState.KUBIOS: #and (Kubios.enabled or Kubios.enable())        
             Kubios.select_and_send(ReturnBtn=ReturnBtn, Encoder=Encoder)
             
         else:
