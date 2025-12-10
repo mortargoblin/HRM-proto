@@ -16,11 +16,11 @@ class MQTTManager:
         
 
         #topics
-        self.TOPIC_HR = 'hr_monitor/heart_rate'
-        self.TOPIC_HRV = 'hr_monitor/hrv_data'
-        self.TOPIC_STATUS = 'hr_monitor/status'
-        self.TOPIC_KUBIOS_REQUEST = 'kubios/request'
-        self.TOPIC_KUBIOS_RESPONSE = 'kubios/response'
+        self.TOPIC_HR = b'hr_monitor/heart_rate'
+        self.TOPIC_HRV = b'hr_monitor/hrv_data'
+        self.TOPIC_STATUS = b'hr_monitor/status'
+        self.TOPIC_KUBIOS_REQUEST = b'kubios/request'
+        self.TOPIC_KUBIOS_RESPONSE = b'kubios/response'
       
     def connect_mqtt(self):
         try:
@@ -28,7 +28,8 @@ class MQTTManager:
                 self.client = MQTTClient(self.CLIENT_ID, self.MQTT_BROKER, 
                                        port=self.MQTT_PORT, 
                                        user=self.MQTT_USER, 
-                                       password=self.MQTT_PASS)
+                                       password=self.MQTT_PASS,
+                                       )
             else:
                 self.client = MQTTClient(self.CLIENT_ID, self.MQTT_BROKER, 
                                        port=self.MQTT_PORT)
@@ -72,24 +73,19 @@ class MQTTManager:
                 pass
             self.connected = False
     
-    async def connect_wifi(self):
+    def connect_wifi(self):
         wlan = network.WLAN(network.STA_IF)
-        wlan_mac = wlan.config('mac')
-        self.mac_add = f'{wlan_mac.hex().upper()}'
-        print("MAC: ", self.mac_add)
         wlan.active(True)
+        wlan.connect("KME_759_Group_7", "Group_6Group_7")
         
-        WIFI_SSID = 'KME_759_Group_7'
-        WIFI_PASS = 'Group_6Group_7'
-
-        wlan.connect(WIFI_SSID, WIFI_PASS)
-
-        for _ in range(100):  
+        for _ in range(1000):
             if wlan.isconnected():
-                ntptime.host = "pool.ntp.org"
-                ntptime.settime()
+                print("WiFi Connected:", wlan.ifconfig())
+                wlan_mac = wlan.config('mac')
+                self.mac_add = f'{wlan_mac.hex().upper()}'
+                print("MAC: ", self.mac_add)
                 return True
-            await asyncio.sleep(0.05)
+            time.sleep(0.05)
 
         print("WiFi connection failed")
         return False
@@ -103,16 +99,16 @@ class MQTTManager:
 
         def callback(topic, msg):
             try:
-                if topic.decode() == self.TOPIC_KUBIOS_RESPONSE:
+                if topic == self.TOPIC_KUBIOS_RESPONSE:
                     result["value"] = msg.decode()
             except Exception as e:
-                print(f"Kubios callback error: {e}")
+                print("Kubios callback error:", e)
 
         try:
             self.client.set_callback(callback)
             self.client.subscribe(self.TOPIC_KUBIOS_RESPONSE)
         except Exception as e:
-            print(f"Subscribe failed: {e}")
+            print("Subscribe failed:", e)
             return None
 
         start = time.time()
@@ -120,16 +116,12 @@ class MQTTManager:
             try:
                 self.client.check_msg()
             except Exception as e:
-                print(f"Error while waiting kubios result: {e}")
+                print("Error while waiting kubios result:", e)
                 break
             time.sleep(0.1)
-
-        try:
-            self.client.set_callback(None)
-        except:
-            pass
-
+        print(result["value"])
         return result["value"]
+
             
     def check_connection(self):
         try:

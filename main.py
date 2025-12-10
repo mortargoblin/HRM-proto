@@ -34,7 +34,7 @@ Kubios = kubios.KubiosAnalytics()
 #-----------#
 # Main Loop #
 #-----------#
-async def main():
+def main():
     current_state = MenuState.HR_DISPLAY
 
     ### MAIN LOOP ###
@@ -52,28 +52,27 @@ async def main():
         # rotary encoder button handling
         if Encoder.pressed:
             Encoder.pressed = False
-            await launch(current_state)
+            launch(current_state)
 
         if ReturnBtn.pressed:
             ReturnBtn.pressed = False
 
-        await asyncio.sleep(0)
 #--------------------------------------------------------------------------------#
 # Function for running different modes on the device: (HR, HRV, KUBIOS, HISTORY) #
 #--------------------------------------------------------------------------------#
-async def launch(option: int):
+def launch(option: int):
     if option == MenuState.HR_DISPLAY:
         hrlib.hr_monitor(ReturnBtn=ReturnBtn, Encoder=Encoder, mode="hr", Mqtt=Mqtt)
 
     elif option in [MenuState.HRV, MenuState.KUBIOS]:
         # Loading Screen Animation #
-        loading_screen = asyncio.create_task(animator.loading_animation())
-        wifi_connect = asyncio.create_task(Mqtt.connect_wifi())      
-        wifi_enabled = await wifi_connect
-        loading_screen.cancel()
-        await asyncio.sleep(0.05)
+        #loading_screen = asyncio.create_task(animator.loading_animation())
+        #wifi_connect = asyncio.create_task(Mqtt.connect_wifi())      
+        #wifi_enabled = await wifi_connect
+        #loading_screen.cancel()
+        #await asyncio.sleep(0.05)
 
-        if option == MenuState.HRV and wifi_enabled:
+        if option == MenuState.HRV and Mqtt.connect_wifi():
             hrlib.hr_monitor(ReturnBtn=ReturnBtn, Encoder=Encoder, mode="hrv", Mqtt=Mqtt)
 
         elif option == MenuState.KUBIOS and (Kubios.enabled or Kubios.enable()):        
@@ -87,4 +86,4 @@ async def launch(option: int):
 
 
 if __name__=="__main__":
-    asyncio.run(main())
+    main()

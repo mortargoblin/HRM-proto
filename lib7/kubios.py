@@ -28,22 +28,20 @@ class KubiosAnalytics:
             print(f"Exception occurred: {e}")
             return False
     
-    def send_hrv_data(self, avg_ppi_list):
+    def send_hrv_data(self, clean_ppi):
         MAC = self.mqtt_manager.mac_add
-        print("CLEAN PPI LIST: ", avg_ppi_list)
-        data = {
-            "mac": f'{MAC}',
-            "type": "RRI",
-            "data": avg_ppi_list,
-            "analysis": {"type": "readiness"}
-        }
-        message = json.dumps(data)
-        print(type(message))
+        print(MAC)
+        kubios_payload = ('{'
+            '"mac": "' + MAC + '",'
+            '"type": "RRI",'
+            '"data": ' + str(clean_ppi) + ','
+            '"analysis": { "type": "readiness" }'
+            '}')
         try:
-            payload_sent = self.mqtt_manager.publish(self.mqtt_manager.TOPIC_KUBIOS_REQUEST, message)
+            payload_sent = self.mqtt_manager.publish(self.mqtt_manager.TOPIC_KUBIOS_REQUEST, kubios_payload)
 
             if payload_sent:
-                print(f"HRV data sent to Kubios: {avg_ppi_list}")
+                print(f"HRV data sent to Kubios: {clean_ppi}")
             return payload_sent
 
         except Exception as e:
@@ -83,9 +81,9 @@ class KubiosAnalytics:
 
             oled.fill(0)
             oled.text("[Kubios]", 0, 0, 1)
-            oled.text("Select patient", 0, 10, 1)
+            oled.text("Select", 75, 0, 1)
 
-            start_y = 24
+            start_y = 12
             step_y = 10
             max_index = len(records)
 
@@ -172,18 +170,28 @@ class KubiosAnalytics:
 
                 #Display result
                 oled.fill(0)
-                oled.text("[Kubios]", 0, 0, 1)
-
                 if response:
-                    oled.text("Result:", 0, 12, 1)
-                    resp_str = str(response)
-                    oled.text(resp_str[:16], 0, 22, 1)
-                    oled.text(resp_str[16:32], 0, 32, 1)
+                    oled.text("[RESULTS]", 35, 0, 1)
+
+                    data = json.loads(response)
+                    analysis = data["data"]["analysis"]            
+                    phys_age = analysis["physiological_age"]
+                    mean_hr_bpm = analysis["mean_hr_bpm"]
+                    mean_rr_ms = analysis["mean_rr_ms"]
+                    pns_index = analysis["pns_index"]
+                    stress_index = analysis["stress_index"]
+
+                    oled.text(f"PHY_AGE: {int(phys_age)}", 0, 12)
+                    oled.text(f"AVG_BPM: {int(mean_hr_bpm)}", 0, 20)
+                    oled.text(f"AVG_RR: {int(mean_rr_ms)}", 0, 28)
+                    oled.text(f"PNS: {int(pns_index)}", 0, 36)
+                    oled.text(f"STRESS: {int(stress_index)}", 0, 44)
+                    
                 else:
                     oled.text("No response", 0, 20, 1)
 
                 oled.show()
-                time.sleep(3)
+                time.sleep(10)
 
                 #Backs up to selecting a patient
                 Encoder.pressed = False
