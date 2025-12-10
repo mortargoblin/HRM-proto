@@ -5,7 +5,8 @@ class MQTTManager:
     def __init__(self):
         self.client = None
         self.connected = False
-        
+        self.wifi_connected = False
+
         # mqtt Config
         self.mac_add = ''
         self.MQTT_BROKER = '192.168.7.253'
@@ -78,16 +79,16 @@ class MQTTManager:
         wlan.active(True)
         wlan.connect("KME_759_Group_7", "Group_6Group_7")
         
-        for _ in range(1000):
+        for _ in range(10):
             if wlan.isconnected():
                 print("WiFi Connected:", wlan.ifconfig())
                 ntptime.host = 'pool.ntp.org'
                 ntptime.settime()
                 wlan_mac = wlan.config('mac')
                 self.mac_add = f'{wlan_mac.hex().upper()}'
-                print("MAC: ", self.mac_add)
+                self.wifi_connected = True
                 return True
-            time.sleep(0.05)
+            time.sleep(0.5)
 
         print("WiFi connection failed")
         return False

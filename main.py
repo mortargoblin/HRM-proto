@@ -72,7 +72,7 @@ def launch(option: int):
         #loading_screen.cancel()
         #await asyncio.sleep(0.05)
 
-        if option == MenuState.HRV and Mqtt.connect_wifi():
+        if option == MenuState.HRV and (Mqtt.wifi_connected or Mqtt.connect_wifi()):
             hrlib.hr_monitor(ReturnBtn=ReturnBtn, Encoder=Encoder, mode="hrv", Mqtt=Mqtt)
 
         elif option == MenuState.KUBIOS and (Kubios.enabled or Kubios.enable()):        
