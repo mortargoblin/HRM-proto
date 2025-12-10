@@ -29,15 +29,16 @@ class KubiosAnalytics:
             return False
     
     def send_hrv_data(self, avg_ppi_list):
+        MAC = self.mqtt_manager.mac_add
+        print("CLEAN PPI LIST: ", avg_ppi_list)
         data = {
-            "type": "RR",
-            "data": {
-                "content": avg_ppi_list,
-                "format": "values"
-                }
-            }
+            "mac": f'{MAC}',
+            "type": "RRI",
+            "data": avg_ppi_list,
+            "analysis": {"type": "readiness"}
+        }
         message = json.dumps(data)
-        
+        print(type(message))
         try:
             payload_sent = self.mqtt_manager.publish(self.mqtt_manager.TOPIC_KUBIOS_REQUEST, message)
 
@@ -141,7 +142,6 @@ class KubiosAnalytics:
                 oled.fill(0)
                 oled.text("[Kubios]", 0, 0, 1)
                 oled.text(f"Sending Patient {counter}", 0, 20, 1)
-                oled.text(date_str, 0, 30, 1)
                 oled.show()
 
                 print("Sending to Kubios:", clean_ppi_list)

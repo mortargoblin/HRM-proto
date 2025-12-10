@@ -7,12 +7,14 @@ class MQTTManager:
         self.connected = False
         
         # mqtt Config
+        self.mac_add = ''
         self.MQTT_BROKER = '192.168.7.253'
         self.MQTT_PORT = 21883 
         self.MQTT_USER = 'Rizvan'
         self.MQTT_PASS = 'Group_6Group_7'
         self.CLIENT_ID = b'hr_monitor_' + ubinascii.hexlify(machine.unique_id())
         
+
         #topics
         self.TOPIC_HR = 'hr_monitor/heart_rate'
         self.TOPIC_HRV = 'hr_monitor/hrv_data'
@@ -72,6 +74,9 @@ class MQTTManager:
     
     async def connect_wifi(self):
         wlan = network.WLAN(network.STA_IF)
+        wlan_mac = wlan.config('mac')
+        self.mac_add = f'{wlan_mac.hex().upper()}'
+        print("MAC: ", self.mac_add)
         wlan.active(True)
         
         WIFI_SSID = 'KME_759_Group_7'

@@ -128,6 +128,7 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
 
     hr_datapoint_arr = []
     ppi_list = []
+    ppi_list_long = []
     mean_bpm_list = []
     bpm = 0
     mean_bpm = 0
@@ -185,6 +186,7 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
 
                 if current_max_interval > 300:
                     ppi_list.append(current_max_interval)
+                    ppi_list_long.append(current_max_interval)
                     current_max = 0
                     # print(ppi_list)
                     # print("Timer: ", timer.count)
@@ -217,12 +219,13 @@ def hr_monitor(ReturnBtn, Encoder, mode: str, Mqtt):
                 print(f"NTP: {time_str}")
                 (mean_bpm, mean_ppi, rm, sd) = hrv_cl.calc_hrv(mean_bpm_list, ppi_list)
 
-                data = [f"{time_str}", f"AVG_BPM: {mean_bpm}", f"AVG_PPI: {mean_ppi}", f"RMSSD: {rm}", f"SDNN: {sd}", f"{ppi_list}"]
+                data = [f"{time_str}", f"AVG_BPM: {mean_bpm}", f"AVG_PPI: {mean_ppi}", f"RMSSD: {rm}", f"SDNN: {sd}", f"{ppi_list_long}"]
 
                 if Mqtt.connected: #Data published to MQTT every 30 seconds
                     Mqtt.publish(f"{Mqtt.TOPIC_HRV}", f"{data}")
                 history.store_Data(datalist=data)
-
+                ppi_list_long = []
+                
             # draw stats 
             if mode == "hrv":
                 # More stuff

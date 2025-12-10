@@ -73,10 +73,10 @@ async def launch(option: int):
         loading_screen.cancel()
         await asyncio.sleep(0.05)
 
-        if option == MenuState.HRV: #and wifi_enabled
+        if option == MenuState.HRV and wifi_enabled:
             hrlib.hr_monitor(ReturnBtn=ReturnBtn, Encoder=Encoder, mode="hrv", Mqtt=Mqtt)
 
-        elif option == MenuState.KUBIOS: #and (Kubios.enabled or Kubios.enable())        
+        elif option == MenuState.KUBIOS and (Kubios.enabled or Kubios.enable()):        
             Kubios.select_and_send(ReturnBtn=ReturnBtn, Encoder=Encoder)
             
         else:
