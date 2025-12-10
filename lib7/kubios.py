@@ -170,31 +170,31 @@ class KubiosAnalytics:
 
                 #Display result
                 oled.fill(0)
-                if response:
-                    oled.text("[RESULTS]", 35, 0, 1)
+                while not ReturnBtn.pressed:
+                    if response:
+                        oled.text("[RESULTS]", 35, 0, 1)
 
-                    data = json.loads(response)
-                    analysis = data["data"]["analysis"]            
-                    phys_age = analysis["physiological_age"]
-                    mean_hr_bpm = analysis["mean_hr_bpm"]
-                    mean_rr_ms = analysis["mean_rr_ms"]
-                    pns_index = analysis["pns_index"]
-                    stress_index = analysis["stress_index"]
+                        data = json.loads(response)
+                        analysis = data["data"]["analysis"]            
+                        phys_age = analysis["physiological_age"]
+                        mean_hr_bpm = analysis["mean_hr_bpm"]
+                        mean_rr_ms = analysis["mean_rr_ms"]
+                        pns_index = analysis["pns_index"]
+                        stress_index = analysis["stress_index"]
 
-                    oled.text(f"PHY_AGE: {int(phys_age)}", 0, 12)
-                    oled.text(f"AVG_BPM: {int(mean_hr_bpm)}", 0, 20)
-                    oled.text(f"AVG_RR: {int(mean_rr_ms)}", 0, 28)
-                    oled.text(f"PNS: {int(pns_index)}", 0, 36)
-                    oled.text(f"STRESS: {int(stress_index)}", 0, 44)
+                        oled.text(f"PHY_AGE: {int(phys_age)}", 0, 12)
+                        oled.text(f"AVG_BPM: {int(mean_hr_bpm)}", 0, 20)
+                        oled.text(f"AVG_RR: {int(mean_rr_ms)}", 0, 28)
+                        oled.text(f"PNS: {int(pns_index)}", 0, 36)
+                        oled.text(f"STRESS: {int(stress_index)}", 0, 44)
+                        
+                    else:
+                        oled.text("No response", 0, 20, 1)
+                    oled.show()
                     
-                else:
-                    oled.text("No response", 0, 20, 1)
-
-                oled.show()
-                time.sleep(10)
-
                 #Backs up to selecting a patient
                 Encoder.pressed = False
+                ReturnBtn.pressed = False
                 draw_kubios_select(counter)
 
         ReturnBtn.pressed = False
