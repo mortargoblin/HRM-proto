@@ -81,6 +81,8 @@ class MQTTManager:
         for _ in range(1000):
             if wlan.isconnected():
                 print("WiFi Connected:", wlan.ifconfig())
+                ntptime.host = 'pool.ntp.org'
+                ntptime.settime()
                 wlan_mac = wlan.config('mac')
                 self.mac_add = f'{wlan_mac.hex().upper()}'
                 print("MAC: ", self.mac_add)

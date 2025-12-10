@@ -12,6 +12,9 @@
     ["lib7/kubios.py", "http://localhost:8000/lib7/kubios.py"],
     ["lib7/mqtt.py", "http://localhost:8000/lib7/mqtt.py"],
     ["lib7/history.py", "http://localhost:8000/lib7/history.py"],
+    ["lib7/hrv.py", "http://localhost:8000/lib7/hrv.py"],
+    ["lib7/menu_icons.py", "http://localhost:8000/lib7/menu_icons.py"],
+    ["patient_records.txt", "http://localhost:8000/patient_records.txt"],
   ],
   "deps": [
   ],
